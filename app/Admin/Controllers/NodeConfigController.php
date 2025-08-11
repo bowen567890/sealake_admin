@@ -50,6 +50,17 @@ class NodeConfigController extends AdminController
             $grid->disablePagination();	
         });
     }
+    
+    protected function detail($id)
+    {
+        return Show::make($id, new NodeConfig(), function (Show $show) {
+        
+            $show->field('created_at');
+            $show->field('updated_at');
+            $show->disableDeleteButton();
+            $show->disableEditButton();
+        });
+    }
 
     protected function form()
     {
