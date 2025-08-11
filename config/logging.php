@@ -369,6 +369,15 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
+        'buy_node' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/buy_node.log'),
+            'channels' => ['single'],
+            'ignore_exceptions' => false,
+        ],
+        
     ],
+    
+    
 
 ];

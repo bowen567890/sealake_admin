@@ -19,7 +19,7 @@ class CheckCallback
         //判断IP
         $trustIp = [
             '127.0.0.1',
-            '121.127.246.234',
+            '103.12.148.67',
         ];
 
         $ip = getClientIp();

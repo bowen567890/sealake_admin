@@ -8,7 +8,8 @@ return [
         'name' => '名称',
         'lv' => '等级',
         'rate' => '奖励比率',
-        'under_usdt' => '伞下业绩(USDT)',
+        'equal_rate' => '平级比率',
+        'small_num' => '小区业绩(单数)',
     ],
     'options' => [
     ],

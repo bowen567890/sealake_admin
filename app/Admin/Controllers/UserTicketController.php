@@ -2,39 +2,34 @@
 
 namespace App\Admin\Controllers;
 
-use App\Models\PowerOrder;
+use App\Models\UserTicket;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
 
-class PowerOrderController extends AdminController
+class UserTicketController extends AdminController
 {
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    public $statusArr = [0=> '待使用', 1=>'已使用',2=>'已赠送'];
+    public $sourceTypeArr = [1=>'平台购买',2=>'平台赠送',3=>'用户赠送'];
     protected function grid()
     {
-        return Grid::make(PowerOrder::with(['user']), function (Grid $grid) {
+        return Grid::make(UserTicket::with(['ticket']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
-            $grid->column('power');
-            $grid->column('usdt_num');
-//             $grid->column('pay_type');
-//             $grid->column('ordernum');
-            $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
-            ->modal(function ($modal) {
-                // 设置弹窗标题
-                $modal->title('交易哈希');
-                // 自定义图标
-                return $this->hash;
+            $grid->column('ticket_id');
+            $grid->column('ticket_id')->display(function() {
+                if ($this->ticket){
+                    return $this->ticket->ticket_price;
+                }else{
+                    return '0';
+                }
             });
+            $grid->column('status')->using($this->statusArr)->label('success');
+            $grid->column('source_type')->using($this->sourceTypeArr)->label('success');
 //             $grid->column('is_sync');
             $grid->column('created_at');
-//             $grid->column('updated_at')->sortable();
-        
+            
             $grid->model()->orderBy('id','desc');
             
             $grid->disableCreateButton();
@@ -44,8 +39,12 @@ class PowerOrderController extends AdminController
             $grid->scrollbarX();    			//滚动条
             $grid->paginate(10);				//分页
             
+        
             $grid->filter(function (Grid\Filter $filter) {
+                $filter->equal('id');
                 $filter->equal('user_id');
+                $filter->equal('status')->select($this->statusArr);
+                $filter->equal('source_type')->select($this->sourceTypeArr);
             });
         });
     }
@@ -59,14 +58,12 @@ class PowerOrderController extends AdminController
      */
     protected function detail($id)
     {
-        return Show::make($id, new PowerOrder(), function (Show $show) {
+        return Show::make($id, new UserTicket(), function (Show $show) {
             $show->field('id');
             $show->field('user_id');
-            $show->field('power');
-            $show->field('usdt_num');
-            $show->field('pay_type');
-            $show->field('ordernum');
-            $show->field('hash');
+            $show->field('ticket_id');
+            $show->field('status');
+            $show->field('source_type');
             $show->field('is_sync');
             $show->field('created_at');
             $show->field('updated_at');
@@ -80,14 +77,12 @@ class PowerOrderController extends AdminController
      */
     protected function form()
     {
-        return Form::make(new PowerOrder(), function (Form $form) {
+        return Form::make(new UserTicket(), function (Form $form) {
             $form->display('id');
             $form->text('user_id');
-            $form->text('power');
-            $form->text('usdt_num');
-            $form->text('pay_type');
-            $form->text('ordernum');
-            $form->text('hash');
+            $form->text('ticket_id');
+            $form->text('status');
+            $form->text('source_type');
             $form->text('is_sync');
         
             $form->display('created_at');

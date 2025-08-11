@@ -30,23 +30,23 @@ class HomeController extends Controller
                     $column->row(function (Row $row){
                         $row->column(3,new TotalUsers());
                         $row->column(3,new TodayUsers());
-                        $row->column(3,new TotalDogbee());
-                        $row->column(3,new TotalWithdrawDogbee());
+//                         $row->column(3,new TotalDogbee());
+//                         $row->column(3,new TotalWithdrawDogbee());
                     });
                 });
 
                 $row->column(12, function (Column $column) {
                     $column->row(function (Row $row){
-                        $row->column(3,new TotalLuckyPool());
-                        $row->column(3,new TotalPower());
-                        $row->column(3,new TotalUsdt());
-                        $row->column(3,new TotalWithdrawUsdt());
+//                         $row->column(3,new TotalLuckyPool());
+//                         $row->column(3,new TotalPower());
+//                         $row->column(3,new TotalUsdt());
+//                         $row->column(3,new TotalWithdrawUsdt());
                     });
                 });
 
                 $row->column(12, function (Column $column) {
                     $column->row(function (Row $row){
-                        $row->column(3,new TotalYeji());
+//                         $row->column(3,new TotalYeji());
                     });
                 });
                    

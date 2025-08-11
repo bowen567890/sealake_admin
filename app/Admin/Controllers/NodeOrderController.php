@@ -2,13 +2,13 @@
 
 namespace App\Admin\Controllers;
 
-use App\Models\MerchantOrder;
+use App\Models\NodeOrder;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
 
-class MerchantOrderController extends AdminController
+class NodeOrderController extends AdminController
 {
     /**
      * Make a grid builder.
@@ -17,12 +17,27 @@ class MerchantOrderController extends AdminController
      */
     protected function grid()
     {
-        return Grid::make(new MerchantOrder(), function (Grid $grid) {
+        return Grid::make(NodeOrder::with(['ticket','rank']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
-            $grid->column('point');
-            $grid->column('usdt_num');
-            $grid->column('dogbee');
+            $grid->column('price');
+            $grid->column('gift_ticket_id')->display(function() {
+                if ($this->ticket){
+                    return $this->ticket->ticket_price;
+                }else{
+                    return '0';
+                }
+            });
+            $grid->column('gift_ticket_num');
+            $grid->column('gift_rank_id')->display(function() {
+                if ($this->rank){
+                    return 'V'.$this->rank->lv;
+                }else{
+                    return 'V0';
+                }
+            });
+            
+            $grid->column('static_rate');
 //             $grid->column('pay_type');
             $grid->column('ordernum');
             $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
@@ -32,9 +47,8 @@ class MerchantOrderController extends AdminController
                 // 自定义图标
                 return $this->hash;
             });
+        
             $grid->column('created_at');
-            //             $grid->column('updated_at')->sortable();
-            
             $grid->model()->orderBy('id','desc');
             
             $grid->disableCreateButton();
@@ -49,4 +63,5 @@ class MerchantOrderController extends AdminController
             });
         });
     }
+
 }

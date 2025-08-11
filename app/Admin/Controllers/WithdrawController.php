@@ -12,8 +12,6 @@ class WithdrawController extends AdminController
 {
     public $CoinTypeArr = [
         1=>'USDT',
-//         2=>'MH',
-        3=>'DOGBEE',
     ];
     
     protected function grid()

@@ -36,6 +36,11 @@ use App\Models\NormalNodeOrderLog;
 use App\Models\NormalNodeOrder;
 use App\Models\SuperNodeOrderLog;
 use App\Models\SuperNodeOrder;
+use App\Models\NodeOrderLog;
+use App\Models\NodeOrder;
+use App\Models\TicketConfig;
+use App\Models\UserTicket;
+use App\Models\NodeConfig;
 
 
 class CallbackController extends Controller
@@ -65,21 +70,15 @@ class CallbackController extends Controller
         $order->content = json_encode($in);
         $order->save();
         
-        //订单类型1余额提币2购买算力3签到触发4开通商家5购买积分6开通普通节点7开通超级节点
+        //订单类型1余额提币2购买节点3购买入场券4缴纳保证金
         if ($order->type==1){
             $this->withdraw($in);
         } else if ($order->type==2) {
-            $this->buyPower($in);
+            $this->buyNode($in);
         } else if ($order->type==3) {
             $this->signPower($in);
         } else if ($order->type==4) {
             $this->openMerchant($in);
-        } else if ($order->type==5) {
-            $this->buyPoint($in);
-        } else if ($order->type==6) {
-            $this->openNormalNode($in);
-        } else if ($order->type==7) {
-            $this->openSuperNode($in);
         }
         
         return responseValidateError('订单未找到');
@@ -326,29 +325,29 @@ class CallbackController extends Controller
     }
     
     //开通商家
-    private function openMerchant($in)
+    private function buyNode($in)
     {
         $ordernum = $in['remarks'];
         
-        $lockKey = 'callback:openMerchant:'.$ordernum;
+        $lockKey = 'callback:buyNode:'.$ordernum;
         $MyRedis = new MyRedis();
-//                                         $MyRedis->del_lock($lockKey);
+                                        $MyRedis->del_lock($lockKey);
         $ret = $MyRedis->setnx_lock($lockKey, 30);
         if(!$ret){
-            Log::channel('open_merchant')->info('上锁失败', $in);
+            Log::channel('buy_node')->info('上锁失败', $in);
             die;
         }
         
-        $order = MerchantOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
+        $order = NodeOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
         if (!$order) {
-            Log::channel('open_merchant')->info('订单不存在', $in);
+            Log::channel('buy_node')->info('订单不存在', $in);
             $MyRedis->del_lock($lockKey);
             die;
         }
         
-        if (!isset($in['coin_token']) || $in['coin_token']!='DOGBEE')
+        if (!isset($in['coin_token']) || $in['coin_token']!='USDT')
         {
-            Log::channel('open_merchant')->info('币种不正确', $in);
+            Log::channel('buy_node')->info('币种不正确', $in);
             $MyRedis->del_lock($lockKey);
             die;
         }
@@ -357,9 +356,9 @@ class CallbackController extends Controller
         $amount = @bcadd($in['amount'], '0', 2);
         
         //支付类型1USDT(链上)
-        if (bccomp($order->dogbee, $amount, 2)>0) {
+        if (bccomp($order->price, $amount, 2)>0) {
             if ($in['status']==3 && $order->pay_status==0) {
-                Log::channel('open_merchant')->info('金额有误', $in);
+                Log::channel('buy_node')->info('金额有误', $in);
                 $order->pay_status = 2;
                 $order->hash = $hash;
                 $order->save();
@@ -371,32 +370,77 @@ class CallbackController extends Controller
         
         if ($in['status']==3 && $order->pay_status==0)
         {
-            $time = time();
-            $datetime = date('Y-m-d H:i:s', $time);
             
-            $order->pay_status = 1;
-            $order->hash = $hash;
-            $order->finish_time = $datetime;
-            $order->save();
-            
-            $MerchantOrder = new MerchantOrder();
-            $MerchantOrder->ordernum = $order->ordernum;
-            $MerchantOrder->user_id = $order->user_id;
-            $MerchantOrder->point = $order->point;
-            $MerchantOrder->usdt_num = $order->usdt_num;
-            $MerchantOrder->dogbee = $order->dogbee;
-            $MerchantOrder->pay_type = $order->pay_type;
-            $MerchantOrder->hash = $hash;
-            $MerchantOrder->finish_time = $datetime;
-            $MerchantOrder->save();
-            
-            User::query()->where('id', $order->user_id)->update(['is_merchant'=>1]);
-            
-            $userModel = new User();
-            //分类1系统增加2系统扣除3开通商家4购买积分5转出扣除6转入获得7兑换算力
-            $userModel->handleUser('point', $order->user_id, $order->point, 1, ['cate'=>3, 'msg'=>'开通商家', 'ordernum'=>$order->ordernum]);
-            
-            $this->setOrderStatus($ordernum, 1);
+            DB::beginTransaction();
+            try
+            {   
+                $time = time();
+                $datetime = date('Y-m-d H:i:s', $time);
+                
+                $order->pay_status = 1;
+                $order->hash = $hash;
+                $order->finish_time = $datetime;
+                $order->save();
+                
+                $NodeOrder = new NodeOrder();
+                $NodeOrder->ordernum = $order->ordernum;
+                $NodeOrder->user_id = $order->user_id;
+                $NodeOrder->lv = $order->lv;
+                $NodeOrder->price = $order->price;
+                $NodeOrder->gift_ticket_id = $order->gift_ticket_id;
+                $NodeOrder->gift_ticket_num = $order->gift_ticket_num;
+                $NodeOrder->gift_rank_id = $order->gift_rank_id;
+                $NodeOrder->static_rate = $order->static_rate;
+                $NodeOrder->pay_type = $order->pay_type;
+                $NodeOrder->hash = $hash;
+                $NodeOrder->save();
+                
+                $TicketConfig = TicketConfig::query()->where('id', $order->gift_ticket_id)->first();
+                if ($TicketConfig && $order->gift_ticket_num>0)
+                {
+                    $TicketData = [];
+                    for ($i=1; $i<=$order->gift_ticket_num; $i++)
+                    {
+                        $TicketData[] = [
+                            'user_id' => $order->user_id,
+                            'ticket_id' => $order->gift_ticket_id,
+                            'source_type' => 2, //来源1平台购买2平台赠送3用户赠送
+                            'ordernum' => $order->ordernum,
+                            'created_at' => $datetime,
+                            'updated_at' => $datetime
+                        ];
+                    }
+                    UserTicket::query()->insert($TicketData);
+                }
+                
+                $uup = [];
+                $uup['node_rank'] = $order->lv;
+                $RankConfig = RankConfig::query()->where('lv', $order->gift_rank_id)->first();
+                if ($RankConfig) {
+                    $uup['rank'] = $RankConfig->lv;
+                    $uup['hold_rank'] = 1;
+                }
+                if (bccomp($order->static_rate, '0', 2)>0) {
+                    $uup['static_rate'] = $order->static_rate;
+                }
+                User::query()->where('id', $order->user_id)->update($uup);
+                
+                NodeConfig::query()->where('lv', $order->lv)->update([
+                    'stock'=> DB::raw("`stock`-1"),
+                    'sales'=> DB::raw("`sales`+1")
+                ]);
+                
+                $this->setOrderStatus($ordernum, 1);
+                
+                DB::commit();
+            }
+            catch (\Exception $e)
+            {
+                DB::rollBack();
+                Log::channel('buy_node')->info('回调失败', $in);
+                
+//                 var_dump($e->getMessage().$e->getLine());die;
+            }
         }
         $MyRedis->del_lock($lockKey);
         exit('success');

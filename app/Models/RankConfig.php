@@ -20,7 +20,7 @@ class RankConfig extends Model
         $MyRedis = new MyRedis();
         $list = self::query()
             ->orderBy('lv', 'asc')
-            ->get(['lv','name','rate','under_usdt'])
+            ->get()
             ->toArray();
         if ($list) {
             $MyRedis->set_key($key, serialize($list));

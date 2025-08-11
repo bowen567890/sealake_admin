@@ -6,21 +6,21 @@ use Dcat\Admin\Traits\HasDateTimeFormatter;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ManageRankConfig extends Model
+class NodeConfig extends Model
 {
 	use HasDateTimeFormatter;
-    protected $table = 'manage_rank_config';
+    protected $table = 'node_config';
     
     /**
      * 设置缓存
      */
     public static function SetListCache()
     {
-        $key = 'ManageRankConfigList';
+        $key = 'NodeConfigList';
         $MyRedis = new MyRedis();
         $list = self::query()
             ->orderBy('lv', 'asc')
-            ->get(['lv','name','reward_usdt','backend_set','is_show'])
+            ->get()
             ->toArray();
         if ($list) {
             $MyRedis->set_key($key, serialize($list));
@@ -37,7 +37,7 @@ class ManageRankConfig extends Model
      */
     public static function GetListCache()
     {
-        $key = 'ManageRankConfigList';
+        $key = 'NodeConfigList';
         $MyRedis = new MyRedis();
         $list = $MyRedis->get_key($key);
         if (!$list) {

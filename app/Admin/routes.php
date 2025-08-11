@@ -54,8 +54,14 @@ Route::group([
     $router->resource('normal_nodeorder','NormalNodeOrderController');
     $router->resource('super_nodeorder','SuperNodeOrderController');
     
+    $router->resource('node_config','NodeConfigController');
+    $router->resource('node_order','NodeOrderController');
+    $router->resource('ticket_config','TicketConfigController');
+    $router->resource('user_ticket','UserTicketController');
     
-    $router->any('auth/extensions',function (){
-        die();
-    });
+    
+    
+//     $router->any('auth/extensions',function (){
+//         die();
+//     });
 });

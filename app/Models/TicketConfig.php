@@ -6,23 +6,22 @@ use Dcat\Admin\Traits\HasDateTimeFormatter;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PointConfig extends Model
+class TicketConfig extends Model
 {
 	use HasDateTimeFormatter;
-    protected $table = 'point_config';
+    protected $table = 'ticket_config';
+    
     
     /**
      * 设置缓存
      */
     public static function SetListCache()
     {
-        $key = 'PointConfigList';
+        $key = 'TicketConfigList';
         $MyRedis = new MyRedis();
         $list = self::query()
-            ->where('is_del', 0)
-            ->orderBy('usdt_num', 'asc')
-            ->orderBy('point', 'asc')
-            ->get(['id','usdt_num','point'])
+            ->orderBy('ticket_price', 'asc')
+            ->get()
             ->toArray();
         if ($list) {
             $MyRedis->set_key($key, serialize($list));
@@ -39,7 +38,7 @@ class PointConfig extends Model
      */
     public static function GetListCache()
     {
-        $key = 'PointConfigList';
+        $key = 'TicketConfigList';
         $MyRedis = new MyRedis();
         $list = $MyRedis->get_key($key);
         if (!$list) {

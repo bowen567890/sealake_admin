@@ -21,6 +21,11 @@ use App\Models\NormalNodeOrderLog;
 use App\Models\SuperNodeOrderLog;
 use App\Models\NormalNodeOrder;
 use App\Models\SuperNodeOrder;
+use App\Models\NodeConfig;
+use App\Models\TicketConfig;
+use App\Models\RankConfig;
+use App\Models\NodeOrderLog;
+use App\Models\NodeOrder;
 
 class NodeController extends Controller
 {
@@ -28,53 +33,37 @@ class NodeController extends Controller
     {
         $user = auth()->user();
         
-        $data = [];
-        $dogbee_price = MainCurrency::query()->where('id', 3)->value('rate');
-        
-        $small_yeji = '0.00';
-        $large_user = User::query()->where('parent_id', $user->id)->orderBy('total_yeji', 'desc')->first(['id','total_yeji']);
-        if ($large_user)
+        $list = NodeConfig::query()
+        ->get(['lv','price','gift_ticket_id','gift_ticket_num','gift_rank_id','static_rate','stock'])
+            ->toArray();
+        if ($list) 
         {
-            $large_yeji = $large_user->total_yeji;
-            if ($user->zhi_num<2) {
-                $small_yeji = '0.00';
-            } else {
-                $small_yeji = User::query()
-                ->where('parent_id', $user->id)
-                ->where('id', '<>', $large_user->id)
-                ->sum('total_yeji');
-                $small_yeji = @bcadd($small_yeji, '0', 2);
+            foreach ($list as &$val) 
+            {
+                $val['ticket_price'] = '0';
+                
+                $TicketConfig = TicketConfig::query()->where('id', $val['gift_ticket_id'])->first();
+                if ($TicketConfig) {
+                    $val['ticket_price'] = $TicketConfig->ticket_price;
+                }
+                
+                $val['rank_lv'] = '0';
+                $RankConfig = RankConfig::query()->where('lv', $val['gift_rank_id'])->first();
+                if ($RankConfig) {
+                    $val['rank_lv'] = $RankConfig->lv;
+                }
+                
+                $val['stock'] = $val['stock']<=0 ? 0 : $val['stock'];
             }
         }
         
-        $data['is_node'] = $user->is_node;
-        $data['super_node'] = $user->super_node;
-        $data['small_yeji'] = $small_yeji;
-        $super_node_community = @bcadd(config('super_node_community'), '0', 2);
-        $is_can_super = 0;
-        if ($user->super_node==1) {
-            $is_can_super = 0;
-        } else {
-            if (bccomp($small_yeji, $super_node_community, 2)>=0) {
-                $is_can_super = 1;
-            }
-        }
-        
-        $data['is_can_super'] = $is_can_super;
-        
-        $data['dogbee_price'] = $dogbee_price;
-        $data['normal_node_price'] = bcadd(config('normal_node_price'), '0', 2);
-        $data['normal_node_power'] = bcadd(config('normal_node_power'), '0', 2);
-        $data['super_node_price'] = bcadd(config('super_node_price'), '0', 2);
-        $data['super_node_community'] = $super_node_community;
-        
-        return responseJson($data);
+        return responseJson($list);
     }
     
     /**
-     * 开通普通节点
+     * 开通节点
      */
-    public function openNormal(Request $request)
+    public function openNode(Request $request)
     {
         $user = auth()->user();
         $in = $request->input();
@@ -83,54 +72,60 @@ class NodeController extends Controller
             return responseValidateError(__('error.用户已被禁止登录'));
         }
         
-        $pay_type = 3;  //支付类型1USDT(链上)3DOGBEE(链上)
+        $lv = 1;
+        if (isset($in['lv']) && in_array($in['lv'], [1,2,3])) {
+            $lv = intval($in['lv']);
+        }
+        
+        $pay_type = 1;  //支付类型1USDT(链上)3DOGBEE(链上)
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-        //                                         $MyRedis->del_lock($lockKey);
+                                                $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 30);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
         }
         
-        $user = User::query()->where('id', $user->id)->first(['id','is_node','super_node']);
-        if ($user->is_node==1) {
+        $user = User::query()->where('id', $user->id)->first(['id','node_rank']);
+        if ($user->node_rank>0) {
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.您已经是普通节点'));
+            return responseValidateError(__('error.您已经是节点'));
         }
         
-        $normal_node_price = intval(config('normal_node_price'));
+        $usdtCurrency = MainCurrency::query()->where('id', 1)->first(['rate','contract_address']);
         
-        if ($normal_node_price<=0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.系统维护'));
-        }
-        
-        $dogbeeCurrency = MainCurrency::query()->where('id', 3)->first(['rate','contract_address']);
-        
-        $usdt_num = $normal_node_price;
-        $dogbee = bcdiv($usdt_num, $dogbeeCurrency->rate, 6);
-        if (bccomp($dogbee, '0', 6)<=0) {
+        $NodeConfig = NodeConfig::query()->where('lv', $lv)->first();
+        if (!$NodeConfig || $NodeConfig->price<=0) {
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.系统维护'));
         }
+        
+        if ($NodeConfig->stock<=0) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.库存不足'));
+        }
+        
+        $price = $NodeConfig->price;
         
         $ordernum = get_ordernum();
-        $Order = new NormalNodeOrderLog();
+        $Order = new NodeOrderLog();
         $Order->ordernum = $ordernum;
         $Order->user_id = $user->id;
-        $Order->usdt_num = $usdt_num;
-        $Order->dogbee = $dogbee;
+        $Order->lv = $NodeConfig->lv;
+        $Order->price = $NodeConfig->price;
+        $Order->gift_ticket_id = $NodeConfig->gift_ticket_id;
+        $Order->gift_ticket_num = $NodeConfig->gift_ticket_num;
+        $Order->gift_rank_id = $NodeConfig->gift_rank_id;
+        $Order->static_rate = $NodeConfig->static_rate;
         $Order->pay_type = $pay_type;
         $Order->save();
         
         $OrderLog = new OrderLog();
         $OrderLog->ordernum = $ordernum;
         $OrderLog->user_id = $user->id;
-        $OrderLog->type = 6;    //订单类型1余额提币2购买算力3签到触发4开通商家5购买积分6开通普通节点7开通超级节点
+        $OrderLog->type = 2;    //订单类型1余额提币2购买节点3购买入场券4缴纳保证金
         $OrderLog->save();
-        
-        $collection_address = '0xe1fccb7e1465abf0e07e07c9c75b2ba4893214ee';
         
         $is_two = 0;
         
@@ -138,12 +133,11 @@ class NodeController extends Controller
         
         $tmp = [];
         $tmp[] = [
-            'num' => $dogbee,
-            'collection_address' => $collection_address,
+            'num' => $price,
         ];
         $pay_data[] = [
-            'total' => $dogbee,
-            'contract_address' => $dogbeeCurrency->contract_address,
+            'total' => $price,
+            'contract_address' => $usdtCurrency->contract_address,
             'list' => $tmp
         ];
         
@@ -157,117 +151,9 @@ class NodeController extends Controller
         return responseJson($data);
     }
     
-    /**
-     * 开通普通节点
-     */
-    public function openSuper(Request $request)
-    {
-        $user = auth()->user();
-        $in = $request->input();
-        if ($user->status==0){
-            auth()->logout();
-            return responseValidateError(__('error.用户已被禁止登录'));
-        }
-        
-        $pay_type = 3;  //支付类型1USDT(链上)3DOGBEE(链上)
-        
-        $lockKey = 'user:info:'.$user->id;
-        $MyRedis = new MyRedis();
-//                                                 $MyRedis->del_lock($lockKey);
-        $lock = $MyRedis->setnx_lock($lockKey, 30);
-        if(!$lock){
-            return responseValidateError(__('error.操作频繁'));
-        }
-        
-        $user = User::query()->where('id', $user->id)->first(['id','is_node','super_node','zhi_num']);
-        if ($user->super_node==1) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.您已经是超级节点'));
-        }
-        
-        $super_node_price = intval(config('super_node_price'));
-        
-        if ($super_node_price<=0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.系统维护'));
-        }
-        
-        $dogbeeCurrency = MainCurrency::query()->where('id', 3)->first(['rate','contract_address']);
-        
-        $usdt_num = $super_node_price;
-        $dogbee = bcdiv($usdt_num, $dogbeeCurrency->rate, 6);
-        if (bccomp($dogbee, '0', 6)<=0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.系统维护'));
-        }
-        
-        
-        $small_yeji = '0.00';
-        $large_user = User::query()->where('parent_id', $user->id)->orderBy('total_yeji', 'desc')->first(['id','total_yeji']);
-        if ($large_user)
-        {
-            $large_yeji = $large_user->total_yeji;
-            if ($user->zhi_num<2) {
-                $small_yeji = '0.00';
-            } else {
-                $small_yeji = User::query()
-                    ->where('parent_id', $user->id)
-                    ->where('id', '<>', $large_user->id)
-                    ->sum('total_yeji');
-                $small_yeji = @bcadd($small_yeji, '0', 2);
-            }
-        }
-     
-        $super_node_community = @bcadd(config('super_node_community'), '0', 2);
-        if (bccomp($super_node_community, $small_yeji, 2)>0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.您不满足开通条件'));
-        }
-        
-        $ordernum = get_ordernum();
-        $Order = new SuperNodeOrderLog();
-        $Order->ordernum = $ordernum;
-        $Order->user_id = $user->id;
-        $Order->usdt_num = $usdt_num;
-        $Order->dogbee = $dogbee;
-        $Order->small_yeji = $small_yeji;
-        $Order->pay_type = $pay_type;
-        $Order->save();
-        
-        $OrderLog = new OrderLog();
-        $OrderLog->ordernum = $ordernum;
-        $OrderLog->user_id = $user->id;
-        $OrderLog->type = 7;    //订单类型1余额提币2购买算力3签到触发4开通商家5购买积分6开通普通节点7开通超级节点
-        $OrderLog->save();
-        
-        $collection_address = '0xe1fccb7e1465abf0e07e07c9c75b2ba4893214ee';
-        
-        $is_two = 0;
-        
-        $pay_data = [];
-        
-        $tmp = [];
-        $tmp[] = [
-            'num' => $dogbee,
-            'collection_address' => $collection_address,
-        ];
-        $pay_data[] = [
-            'total' => $dogbee,
-            'contract_address' => $dogbeeCurrency->contract_address,
-            'list' => $tmp
-        ];
-        
-        $data = [
-            'remarks' => $ordernum,
-            'is_chain' => 1,
-            'is_two' => $is_two,
-            'pay_data' => $pay_data
-        ];
-        $MyRedis->del_lock($lockKey);
-        return responseJson($data);
-    }
+   
     
-    public function openNormalLog(Request $request)
+    public function openNodeLog(Request $request)
     {
         $user = auth()->user();
         $in = $request->input();
@@ -279,7 +165,7 @@ class NodeController extends Controller
         
         $where['user_id'] = $user->id;
         
-        $list = NormalNodeOrder::query()
+        $list = NodeOrder::query()
             ->where($where)
             ->orderBy('id', 'desc')
             ->offset($offset)
@@ -288,27 +174,4 @@ class NodeController extends Controller
             ->toArray();
         return responseJson($list);
     }
-    
-    public function openSuperLog(Request $request)
-    {
-        $user = auth()->user();
-        $in = $request->input();
-        
-        $pageNum = isset($in['page_num']) && intval($in['page_num'])>0 ? intval($in['page_num']) : 10;
-        $page = isset($in['page']) ? intval($in['page']) : 1;
-        $page = $page<=0 ? 1 : $page;
-        $offset = ($page-1)*$pageNum;
-        
-        $where['user_id'] = $user->id;
-        
-        $list = SuperNodeOrder::query()
-            ->where($where)
-            ->orderBy('id', 'desc')
-            ->offset($offset)
-            ->limit($pageNum)
-            ->get()
-            ->toArray();
-        return responseJson($list);
-    }
-    
 }

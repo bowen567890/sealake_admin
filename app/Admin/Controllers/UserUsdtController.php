@@ -15,9 +15,9 @@ class UserUsdtController extends AdminController
         2=>'链上扣除',
         3=>'余额提币',
         4=>'提币驳回',
-        5=>'普通节点',
-        6=>'管理级奖',
-        7=>'超级节点',
+//         5=>'普通节点',
+//         6=>'管理级奖',
+//         7=>'超级节点',
     ];
      
     protected function grid()

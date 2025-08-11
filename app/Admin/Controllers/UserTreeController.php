@@ -10,12 +10,20 @@ use Dcat\Admin\Layout\Content;
 use Dcat\Admin\Widgets\Tab;
 use Dcat\Admin\Widgets\Card;
 use App\Models\User as UserModel;
+use App\Models\RankConfig;
 
 class UserTreeController extends AdminController
 {
-    public $rankArr = [
-        0 => 'V0',1 => 'V1',2 => 'V2',3 => 'V3',4 => 'V4',5 => 'V5',6 => 'V6',7 => 'V7',
+    public $holdRankArr = [
+        0 => '否',1 => '是'
     ];
+    public $rankArr = [];
+    public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
+    public function __construct()
+    {
+        $rankArr = RankConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+        $this->rankArr = array_merge([0=>'V0'], $rankArr);
+    }
     
     public function index(Content $content)
     {
@@ -28,33 +36,14 @@ class UserTreeController extends AdminController
             $grid->column('wallet')->tree();
             $grid->column('id','ID');
             $grid->column('rank')->using($this->rankArr)->label('success');
+            $grid->column('node_rank', '节点等级')->using($this->nodeRankArr)->label('success');
             $grid->column('code');
             $grid->column('usdt');
-            $grid->column('power');
-            $grid->column('dogbee');
-            $grid->column('point');
             $grid->column('zhi_num');
             $grid->column('group_num');
             $grid->column('self_yeji');
             $grid->column('team_yeji');
-            $grid->column('small_yeji','小区业绩')->display(function() {
-                //小区质押数量
-                $small_yeji = '0.00';
-                if ($this->zhi_num<2) {
-                    return '0.00';
-                } else {
-                    $id = UserModel::query()->where('parent_id', $this->id)->orderBy('total_yeji', 'desc')->value('id');
-                    if (intval($id)>0)
-                    {
-                        $small_yeji = UserModel::query()
-                        ->where('parent_id', $this->id)
-                        ->where('id', '<>', $id)
-                        ->sum('total_yeji');
-                        $small_yeji = @bcadd($small_yeji, '0', 2);
-                    }
-                    return $small_yeji;
-                }
-            });
+            $grid->column('small_yeji','小区业绩');
             
             /* 
             $grid->column('wallet', '钱包地址')->display('点击查看') // 设置按钮名称

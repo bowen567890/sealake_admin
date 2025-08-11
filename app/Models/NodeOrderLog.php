@@ -6,9 +6,9 @@ use Dcat\Admin\Traits\HasDateTimeFormatter;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserPower extends Model
+class NodeOrderLog extends Model
 {
 	use HasDateTimeFormatter;
-    protected $table = 'user_power';
+    protected $table = 'node_order_log';
     
 }

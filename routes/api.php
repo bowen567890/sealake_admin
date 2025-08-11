@@ -70,62 +70,17 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('info','UserController@info');
                 Route::post('teamList','UserController@teamList');
                 Route::post('usdtLog','UserController@usdtLog');
-                Route::post('powerLog','UserController@powerLog');
-                Route::post('dogbeeLog','UserController@dogbeeLog');
-                Route::post('pointLog','UserController@pointLog');
-            });
-            
-            Route::prefix('manage')->group(function ()
-            {
-                Route::post('index','ManageController@index');
-                Route::post('operate','ManageController@operate');
-                Route::post('operateLog','ManageController@operateLog');
-            });
-            
-            Route::prefix('merchant')->group(function ()
-            {
-                Route::post('index','MerchantController@index');
-                Route::post('open','MerchantController@open');
-                Route::post('buyPoint','MerchantController@buyPoint');
-                Route::post('buyPointLog','MerchantController@buyPointLog');
-                Route::post('transfer ','MerchantController@transfer');
-                Route::post('transferLog ','MerchantController@transferLog');
+                Route::post('ticketList','UserController@ticketList');
             });
 
             Route::prefix('index')->group(function (){
                 Route::post('index','IndexController@index');
             });
             
-            Route::prefix('power')->group(function (){
-                Route::post('buy','PowerController@buy');
-                Route::post('buyLog','PowerController@buyLog');
-            });
-            
             Route::prefix('node')->group(function (){
                 Route::post('config','NodeController@config');
-                Route::post('openNormal','NodeController@openNormal');
-                Route::post('openSuper','NodeController@openSuper');
-                
-                Route::post('openNormalLog','NodeController@openNormalLog');
-                Route::post('openSuperLog','NodeController@openSuperLog');
-            });
-            
-            Route::prefix('sign')->group(function (){
-                Route::post('config','SignController@config');
-                Route::post('sign','SignController@sign');
-                Route::post('signLog','SignController@signLog');
-            });
-            
-            Route::prefix('lucky')->group(function (){
-                Route::post('index','LuckyController@index');
-                Route::post('draw','LuckyController@draw');
-                Route::post('drawLog','LuckyController@drawLog');
-            });
-                
-            Route::prefix('nft')->group(function (){
-                Route::post('config','NftController@config');
-                Route::post('index','NftController@index');
-                Route::post('buy','NftController@buy');
+                Route::post('openNode','NodeController@openNode');
+                Route::post('openNodeLog','NodeController@openNodeLog');
             });
             
             Route::prefix('basic')->group(function (){
