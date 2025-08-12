@@ -21,7 +21,7 @@ class TicketConfig extends Model
         $MyRedis = new MyRedis();
         $list = self::query()
             ->orderBy('ticket_price', 'asc')
-            ->get()
+            ->get(['id','ticket_price','insurance','status','ticket_sale'])
             ->toArray();
         if ($list) {
             $MyRedis->set_key($key, serialize($list));

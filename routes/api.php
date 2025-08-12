@@ -83,6 +83,12 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('openNodeLog','NodeController@openNodeLog');
             });
             
+            Route::prefix('ticket')->group(function (){
+                Route::post('config','TicketController@config');
+                Route::post('buy','TicketController@buy');
+                Route::post('buyLog','TicketController@buyLog');
+            });
+            
             Route::prefix('basic')->group(function (){
 //                 Route::post('upload','BasicController@upload');
                 Route::post('basic','BasicController@basic');

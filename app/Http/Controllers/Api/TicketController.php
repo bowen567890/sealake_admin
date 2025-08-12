@@ -11,59 +11,26 @@ use App\Models\User;
 use App\Models\MainCurrency;
 use App\Models\OrderLog;
 use GuzzleHttp\Client;
-use App\Models\MerchantOrderLog;
-use App\Models\PointConfig;
-use App\Models\PointOrderLog;
-use App\Models\UserPoint;
-use App\Models\UserPower;
-use App\Models\PointOrder;
-use App\Models\NormalNodeOrderLog;
-use App\Models\SuperNodeOrderLog;
-use App\Models\NormalNodeOrder;
-use App\Models\SuperNodeOrder;
 use App\Models\NodeConfig;
 use App\Models\TicketConfig;
 use App\Models\RankConfig;
 use App\Models\NodeOrderLog;
 use App\Models\NodeOrder;
+use App\Models\TicketOrderLog;
 
-class NodeController extends Controller
+class TicketController extends Controller
 {
     public function config(Request $request)
     {
         $user = auth()->user();
-        
-        $list = NodeConfig::query()
-        ->get(['lv','price','gift_ticket_id','gift_ticket_num','gift_rank_id','static_rate','stock'])
-            ->toArray();
-        if ($list) 
-        {
-            foreach ($list as &$val) 
-            {
-                $val['ticket_price'] = '0';
-                
-                $TicketConfig = TicketConfig::query()->where('id', $val['gift_ticket_id'])->first();
-                if ($TicketConfig) {
-                    $val['ticket_price'] = $TicketConfig->ticket_price;
-                }
-                
-                $val['rank_lv'] = '0';
-                $RankConfig = RankConfig::query()->where('lv', $val['gift_rank_id'])->first();
-                if ($RankConfig) {
-                    $val['rank_lv'] = $RankConfig->lv;
-                }
-                
-                $val['stock'] = $val['stock']<=0 ? 0 : $val['stock'];
-            }
-        }
-        
+        $list = TicketConfig::GetListCache();
         return responseJson($list);
     }
     
     /**
-     * 开通节点
+     * 购买入场券
      */
-    public function openNode(Request $request)
+    public function buy(Request $request)
     {
         $user = auth()->user();
         $in = $request->input();
@@ -72,44 +39,32 @@ class NodeController extends Controller
             return responseValidateError(__('error.用户已被禁止登录'));
         }
         
-        $lv = 1;
-        if (isset($in['lv']) && in_array($in['lv'], [1,2,3])) {
-            $lv = intval($in['lv']);
+        if (!isset($in['id']) || intval($in['id'])<=0) {
+            return responseValidateError(__('error.请选择入场券'));
         }
         
         $pay_type = 1;  //支付类型1USDT(链上)3DOGBEE(链上)
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-//                                                 $MyRedis->del_lock($lockKey);
+                                                $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 30);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
         }
         
-        $user = User::query()->where('id', $user->id)->first(['id','node_rank']);
-        if ($user->node_rank>0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.您已经是节点'));
-        }
-        
         $usdtCurrency = MainCurrency::query()->where('id', 1)->first(['rate','contract_address']);
         
-        $NodeConfig = NodeConfig::query()->where('lv', $lv)->first();
-        if (!$NodeConfig || $NodeConfig->price<=0) {
+        $TicketConfig = TicketConfig::query()->where('lv', $lv)->first();
+        if (!$TicketConfig || $TicketConfig->ticket_price<=0 || $TicketConfig->status!=1) {
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.系统维护'));
         }
         
-        if ($NodeConfig->stock<=0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.库存不足'));
-        }
-        
-        $price = $NodeConfig->price;
+        $ticket_price = $TicketConfig->ticket_price;
         
         $ordernum = get_ordernum();
-        $Order = new NodeOrderLog();
+        $Order = new TicketOrderLog();
         $Order->ordernum = $ordernum;
         $Order->user_id = $user->id;
         $Order->lv = $NodeConfig->lv;
