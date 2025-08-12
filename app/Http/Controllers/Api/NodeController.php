@@ -54,6 +54,9 @@ class NodeController extends Controller
                 }
                 
                 $val['stock'] = $val['stock']<=0 ? 0 : $val['stock'];
+                $static_rate = $val['static_rate']*100;
+                $val['static_rate'] = $static_rate.'%';
+                
             }
         }
         
