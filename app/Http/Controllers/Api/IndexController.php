@@ -47,16 +47,6 @@ class IndexController extends Controller
         $in = $request->input();
         $user = auth()->user();
         $data['wallet'] = $user->wallet;
-        $basic_power_usdt = @bcadd(config('basic_power_usdt'), '0', 2);
-        $power_multiple_num = @bcadd(config('power_multiple_num'), '0', 2);
-        $data['basic_power_usdt'] = $basic_power_usdt>0 ? $basic_power_usdt : 100;
-        $data['basic_power_multiple'] = intval(config('basic_power_multiple'))>0 ? intval(config('basic_power_multiple')) : 1;
-        $data['power_multiple_num'] = $power_multiple_num>0 ? $power_multiple_num : 1;
-        
-        $data['last_sign_time'] = $user->last_sign_time;
-        $data['sign_interval_day'] = intval(config('sign_interval_day'));
-        $data['sign_config'] = SignConfig::GetListCache();
-        
         return responseJson($data);
     }
     
