@@ -198,7 +198,7 @@ class SyncTicketEvent extends Command
                                                     'content' => "层级{$diffLevel}层奖励",
                                                     'created_at' => $datetime,
                                                     'updated_at' => $datetime,
-                                                    ];
+                                                ];
                                             }
                                         }
                                     }

@@ -31,6 +31,7 @@ use App\Models\EnergyOrderLog;
 use App\Models\IgniteOrderLog;
 use App\Models\IgniteOrder;
 use App\Models\SignConfig;
+use App\Models\UserRankingDay;
 
 class IndexController extends Controller
 {
@@ -48,6 +49,28 @@ class IndexController extends Controller
         $user = auth()->user();
         $data['wallet'] = $user->wallet;
         return responseJson($data);
+    }
+    
+    public function ranking(Request $request)
+    {
+        $day_ranking_limit = intval(config('day_ranking_limit'));
+        $day = date('Y-m-d', time()-86400);
+        $list = User::query()
+            ->join('user_ranking_day as d', 'users.id', '=', 'd.user_id')
+            ->where('d.day', $day)
+            ->where('d.num', '>', 0)
+            ->orderBy('d.num', 'desc')
+            ->orderBy('d.updated_at', 'asc')
+            ->limit($day_ranking_limit)
+            ->get(['users.wallet','d.day','d.num'])
+            ->toArray();
+        if ($list) {
+            foreach ($list as $key=>&$val) {
+                $val['wallet'] =  substr_replace($val['wallet'],'*****', 3, -3);
+                $val['ranking'] = $key+1;
+            }
+        }
+        return responseJson($list);
     }
     
     public function newsList(Request $request)

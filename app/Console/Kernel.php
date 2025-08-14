@@ -28,8 +28,12 @@ class Kernel extends ConsoleKernel
         
         //查询代币价格
 //         $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
-        //每小时0分查询USD|CNY价格
-//         $schedule->command('sync:UsdCnyPrice')->cron('0 * * * *');
+        //保证金订单释放
+        $schedule->command('FeeInsuranceOrder')->cron('* * * * *');
+        
+        //池子奖励 每日0点10分分
+        $schedule->command('SyncPoolReward')->cron('10 0 * * *');
+        
         //入场券日志 不在这里执行 脚本每10秒执行
         //         $schedule->command('command:SyncTicketEvent')->cron('* * * * *');
     }

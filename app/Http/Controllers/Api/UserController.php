@@ -62,6 +62,13 @@ class UserController extends Controller
         $data['team_yeji'] = $user->team_yeji;
         $data['small_yeji'] = $user->small_yeji;
         $data['total_yeji'] = $user->total_yeji;
+        
+        $data['self_num'] = $user->self_num;
+        $data['team_num'] = $user->team_num;
+        $data['total_num'] = $user->total_num;
+        $data['small_num'] = $user->small_num;
+        $data['total_income'] = $user->total_income;
+        
         $data['static_rate'] = $user->static_rate;
         $data['headimgurl'] = getImageUrl($user->headimgurl);
         
@@ -88,21 +95,17 @@ class UserController extends Controller
         } else {
             $path = "-{$user->id}-";
         }
-        
         $list = User::query()
             ->where('parent_id', '=', $user_id)
             //             ->where('path', 'like', "{$path}%")
             ->orderBy('id','asc')
             ->offset($offset)
             ->limit($pageNum)
-            ->get(['wallet','power','self_yeji','team_yeji','zhi_yeji','created_at'])
+            ->get(['wallet','self_num','self_yeji','created_at'])
             ->toArray();
         if ($list) {
             foreach ($list as &$val) {
                 $val['wallet'] =  substr_replace($val['wallet'],'*****', 3, -3);
-                $val['power'] = bcadd($val['power'], '0', 2);
-                $val['self_yeji'] = bcadd($val['self_yeji'], '0', 2);
-                $val['team_yeji'] = bcadd($val['team_yeji'], '0', 2);
             }
         }
         
@@ -169,16 +172,21 @@ class UserController extends Controller
             ->offset($offset)
             ->limit($pageNum)
             ->get([
-                'ut.id','ut.user_id','ut.ticket_id','ut.status','ut.source_type','ut.ordernum',
+                'ut.id','ut.user_id','ut.from_uid','ut.ticket_id','ut.status','ut.source_type','ut.ordernum',
                 'ticket_config.ticket_price','ticket_config.insurance','ut.created_at'
             ])
             ->toArray();
-//         if ($list) 
-//         {
-//             foreach ($list as &$v) {
-               
-//             }
-//         }
+        if ($list) 
+        {
+            foreach ($list as &$v) 
+            {
+                $v['can_transfer'] = 0;
+                if ($v['status']==0 && $v['source_type']==2) 
+                {
+                    $v['can_transfer'] = 1;
+                }
+            }
+        }
         return responseJson($list);
     }
 }

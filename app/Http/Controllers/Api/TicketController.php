@@ -129,4 +129,81 @@ class TicketController extends Controller
             //                 var_dump($e->getMessage().$e->getLine());die;
         }
     }
+    
+    public function transfer(Request $request)
+    {
+        $user = auth()->user();
+        $in = $request->input();
+        if ($user->status==0){
+            auth()->logout();
+            return responseValidateError(__('error.用户已被禁止登录'));
+        }
+        
+        if (!isset($in['id']) || intval($in['id'])<=0) {
+            return responseValidateError(__('error.请选择入场券'));
+        }
+        
+        $id = intval($in['id']);
+        
+        if (!isset($in['wallet']) || !$in['wallet'])  {
+            return responseValidateError(__('error.请输入目标地址'));
+        }
+        
+        $wallet = trim($in['wallet']);
+        if (!checkBnbAddress($wallet)) {
+            return responseValidateError(__('error.钱包地址有误'));
+        }
+        
+        
+        $pay_type = 1;  //支付类型1USDT(链上)3DOGBEE(链上)
+        
+        $lockKey = 'user:info:'.$user->id;
+        $MyRedis = new MyRedis();
+//                                                         $MyRedis->del_lock($lockKey);
+        $lock = $MyRedis->setnx_lock($lockKey, 15);
+        if(!$lock){
+            return responseValidateError(__('error.操作频繁'));
+        }
+        
+        $UserTicket = UserTicket::query()
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+        if (!$UserTicket) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.请选择入场券'));
+        }
+        
+        if ($UserTicket->status!=0 || $UserTicket->source_type!=2) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.此入场券不可转账'));
+        }
+            
+        $toUser = User::query()->where('wallet', $wallet)->first(['id']);
+        if (!$toUser) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.目标地址不存在'));
+        }
+        
+        if ($toUser->id==$user->id) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.不可转账给自己'));
+        }
+        
+        
+        $order = new UserTicket();
+        $order->ordernum = $UserTicket->ordernum;
+        $order->user_id = $toUser->id;
+        $order->from_uid = $user->id;
+        $order->ticket_id = $UserTicket->ticket_id;
+        $order->source_type = 3; //来源1平台购买2平台赠送3用户赠送
+        $order->save();
+        
+        $UserTicket->status = 2;    //状态0待使用1已使用2已赠送
+        $UserTicket->from_uid = $toUser->id;
+        $UserTicket->save();
+        
+        $MyRedis->del_lock($lockKey);
+        return responseJson();
+    }
 }

@@ -36,27 +36,20 @@ class WithdrawController extends Controller
             return responseValidateError(__('error.提币数量错误'));
         }
         
-        
-        if (!isset($in['coin_type']) || !$in['coin_type']) {
-            $in['coin_type'] = 3;
-        } else {
-            if (!in_array($in['coin_type'], [1,3])) {
-                $in['coin_type'] = 3;
-            }
-        }
+        $in['coin_type'] = 1;
 //         if ($in['coin_type']==1) {
 //             return responseValidateError(__('error.敬请期待'));
 //         }
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-//         $MyRedis->del_lock($lockKey);
+        $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 15);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
         }
         
-        $withdraw_multiple_num = intval(config('withdraw_multiple_num'));
+//         $withdraw_multiple_num = intval(config('withdraw_multiple_num'));
 //         //整倍数判断
 //         if ($withdraw_multiple_num>0) {
 //             $mod = bcmod($num, $withdraw_multiple_num, 6);
@@ -68,19 +61,14 @@ class WithdrawController extends Controller
 //             }
 //         }
         
-        if ($in['coin_type']==3) {
-            $coin_type = 'dogbee';
-            $coinToken = 'DOGBEE';
-            $contractAddress = MainCurrency::query()->where('id', 3)->value('contract_address');
-            $withdrawFee = @bcadd(config('withdraw_fee_rate'), '0', 6);
-        } else {
+        if ($in['coin_type']==1) {
             $coin_type = 'usdt';
             $coinToken = 'USDT';
             $contractAddress = MainCurrency::query()->where('id', 1)->value('contract_address');
             $withdrawFee = @bcadd(config('withdraw_fee_rate'), '0', 6);
         }
         
-        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt','dogbee','power']);
+        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt']);
         if (bccomp($num, $user->$coin_type, 6)>0){
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.余额不足'));
@@ -100,30 +88,6 @@ class WithdrawController extends Controller
         {
             $wallet = $user->wallet;
             
-            $pool_rate = $pool_num = $fee_power = 0;           
-            if ($in['coin_type']==3) 
-            {
-                $LuckyPool = LuckyPool::query()->where('id', 1)->first();
-                $pool_rate = $LuckyPool->w_rate;
-                $pool_num = bcmul($num, $LuckyPool->w_rate, 6);
-                
-                //当提取dogbee时候依据实时价扣去对应算力，算力不够不让提
-                //DOGBEE价格
-                $dogebeeCurrency = MainCurrency::query()->where('id', 3)->first(['rate','contract_address']);
-                $dogebee_price = $dogebeeCurrency->rate;
-                
-                //扣除的算力 = 提取dogbee数量 * DOGBEE实时价格
-                $fee_power = bcmul($num, $dogebee_price, 6);
-                if (bccomp($fee_power, '0', 6)>0) {
-                    if (bccomp($fee_power, $user->power, 6)>0){
-                        $MyRedis->del_lock($lockKey);
-                        $format = __('error.需要算力手续费');
-                        $msg = sprintf($format, $fee_power);
-                        return responseValidateError($msg);
-                    }
-                }
-            }
-            
             $orderNum = get_ordernum();
             $withdraw = new Withdraw();
             $withdraw->ordernum = $orderNum;
@@ -134,18 +98,11 @@ class WithdrawController extends Controller
             $withdraw->coin_type = $in['coin_type'];
             $withdraw->fee_amount = bcmul($num, $withdrawFee, 6);
             $withdraw->ac_amount = bcsub($num, $withdraw->fee_amount, 6);
-            $withdraw->pool_rate = $pool_rate;
-            $withdraw->pool_num = $pool_num;
-            $withdraw->fee_power = $fee_power;
             $withdraw->save();
             
             $userModel = new User();
+            //分类1系统增加2系统扣除3余额提币4提币驳回
             $userModel->handleUser($coin_type, $user->id, $num, 2, ['cate'=>3, 'msg'=>'余额提币', 'ordernum'=>$orderNum]);
-            
-            if (bccomp($fee_power, '0', 6)>0) {
-                //分类1系统增加2系统扣除3注册赠送4购买算力5签到扣除6推荐加速7见点加速8团队加速9积分兑换10提币扣除11提币驳回
-                $userModel->handleUser('power', $user->id, $fee_power, 2, ['cate'=>10, 'msg'=>'提币扣除', 'ordernum'=>$orderNum]);
-            }
             
             $OrderLog = new OrderLog();
             $OrderLog->ordernum = $orderNum;

@@ -75,6 +75,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
 
             Route::prefix('index')->group(function (){
                 Route::post('index','IndexController@index');
+                Route::post('ranking','IndexController@ranking');
             });
             
             Route::prefix('recharge')->group(function (){
@@ -92,6 +93,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('config','TicketController@config');
                 Route::post('buy','TicketController@buy');
                 Route::post('buyLog','TicketController@buyLog');
+                Route::post('transfer','TicketController@transfer');
             });
             Route::prefix('insurance')->group(function (){
                 Route::post('invest','InsuranceController@invest');

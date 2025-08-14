@@ -44,6 +44,7 @@ use App\Models\NodeConfig;
 use App\Models\TicketOrderLog;
 use App\Models\TicketOrder;
 use App\Models\RechargeLog;
+use App\Models\PoolConfig;
 
 
 class CallbackController extends Controller
@@ -448,8 +449,10 @@ class CallbackController extends Controller
                 $withdraw->hash = $hash;
                 $withdraw->save();
                 
-                if ($withdraw->coin_type==3 && bccomp($withdraw->pool_num, '0', 6)>0) {
-                    LuckyPool::query()->where('id', 1)->increment('pool', $withdraw->pool_num);
+                if (bccomp($withdraw->fee_amount, '0', 6)>0) {
+                    PoolConfig::query()
+                        ->where('type', 1)    //类型1提现池子,2精英池子,3核心池子,4创世池子,5排名池子
+                        ->increment('pool', $withdraw->fee_amount);
                 }
                 
                 $this->setOrderStatus($ordernum, 1);
@@ -460,16 +463,9 @@ class CallbackController extends Controller
             {
                 if ($withdraw->coin_type==1) {
                     $table = 'usdt';
-                } else {
-                    $table = 'dogbee';
                 }
                 
                 $userModel->handleUser($table, $withdraw->user_id, $withdraw->num, 1, ['cate'=>4, 'msg'=>'提币驳回', 'ordernum'=>$withdraw->ordernum]);
-                
-                if (bccomp($withdraw->fee_power, '0', 6)>0) {
-                    //分类1系统增加2系统扣除3注册赠送4购买算力5签到扣除6推荐加速7见点加速8团队加速9积分兑换10提币扣除11提币驳回
-                    $userModel->handleUser('power', $withdraw->user_id, $withdraw->fee_power, 1, ['cate'=>11, 'msg'=>'提币驳回', 'ordernum'=>$withdraw->ordernum]);
-                }
                 
                 $withdraw->status = 2;
                 $withdraw->finsh_time = date('Y-m-d H:i:s');

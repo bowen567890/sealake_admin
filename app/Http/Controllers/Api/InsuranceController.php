@@ -48,7 +48,7 @@ class InsuranceController extends Controller
         $pay_type = 1;  //支付类型1USDT(链上)3DOGBEE(链上)
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-                                                $MyRedis->del_lock($lockKey);
+//                                                 $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 30);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
@@ -210,7 +210,6 @@ class InsuranceController extends Controller
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.当前不可赎回'));
         }
-        
         
         $ordernum = get_ordernum();
         
