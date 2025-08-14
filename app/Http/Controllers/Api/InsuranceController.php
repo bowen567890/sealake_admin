@@ -174,4 +174,58 @@ class InsuranceController extends Controller
             
         return responseJson($list);
     }
+    
+    public function redeem(Request $request)
+    {
+        $user = auth()->user();
+        $in = $request->input();
+        if ($user->status==0){
+            auth()->logout();
+            return responseValidateError(__('error.用户已被禁止登录'));
+        }
+        
+        if (!isset($in['id']) || intval($in['id'])<=0) {
+            return responseValidateError(__('error.请选择挖矿记录'));
+        }
+        $id = intval($in['id']);
+        
+        $lockKey = 'user:info:'.$user->id;
+        $MyRedis = new MyRedis();
+//         $MyRedis->del_lock($lockKey);
+        $lock = $MyRedis->setnx_lock($lockKey, 30);
+        if(!$lock){
+            return responseValidateError(__('error.操作频繁'));
+        }
+        
+        $InsuranceOrder = InsuranceOrder::query()
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+        if (!$InsuranceOrder) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.请选择挖矿记录'));
+        }
+        
+        if ($InsuranceOrder->is_redeem!=0) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.当前不可赎回'));
+        }
+        
+        
+        $ordernum = get_ordernum();
+        
+        //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
+        //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
+        $userModel = new User();
+        $map = ['ordernum'=>$InsuranceOrder->ordernum, 'cate'=>8, 'msg'=>'赎回保证金'];
+        $userModel->handleUser('usdt', $user->id, $InsuranceOrder->insurance, 1, $map);
+        
+        $InsuranceOrder->is_redeem = 1;
+        $InsuranceOrder->redeem_time = date('Y-m-d H:i:s');
+        $InsuranceOrder->save();
+        
+        $MyRedis->del_lock($lockKey);
+        
+        return responseJson();
+    }
 }

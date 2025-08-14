@@ -96,6 +96,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
             Route::prefix('insurance')->group(function (){
                 Route::post('invest','InsuranceController@invest');
                 Route::post('investLog','InsuranceController@investLog');
+                Route::post('redeem','InsuranceController@redeem');
             });
                 
             
