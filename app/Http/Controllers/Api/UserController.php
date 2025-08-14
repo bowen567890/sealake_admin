@@ -164,6 +164,7 @@ class UserController extends Controller
         $list = TicketConfig::query()
             ->join('user_ticket as ut', 'ticket_config.id', '=', 'ut.ticket_id')
             ->where($where)
+            ->orderBy('ut.status', 'asc')
             ->orderBy('ut.id', 'desc')
             ->offset($offset)
             ->limit($pageNum)

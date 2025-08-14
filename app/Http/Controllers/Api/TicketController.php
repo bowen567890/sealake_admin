@@ -51,7 +51,7 @@ class TicketController extends Controller
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-                                                $MyRedis->del_lock($lockKey);
+//                                                 $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 15);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
@@ -128,29 +128,5 @@ class TicketController extends Controller
             return responseValidateError($e->getMessage().$e->getLine());
             //                 var_dump($e->getMessage().$e->getLine());die;
         }
-    }
-    
-   
-    
-    public function openNodeLog(Request $request)
-    {
-        $user = auth()->user();
-        $in = $request->input();
-        
-        $pageNum = isset($in['page_num']) && intval($in['page_num'])>0 ? intval($in['page_num']) : 10;
-        $page = isset($in['page']) ? intval($in['page']) : 1;
-        $page = $page<=0 ? 1 : $page;
-        $offset = ($page-1)*$pageNum;
-        
-        $where['user_id'] = $user->id;
-        
-        $list = NodeOrder::query()
-            ->where($where)
-            ->orderBy('id', 'desc')
-            ->offset($offset)
-            ->limit($pageNum)
-            ->get()
-            ->toArray();
-        return responseJson($list);
     }
 }

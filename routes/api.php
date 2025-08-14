@@ -93,6 +93,11 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('buy','TicketController@buy');
                 Route::post('buyLog','TicketController@buyLog');
             });
+            Route::prefix('insurance')->group(function (){
+                Route::post('invest','InsuranceController@invest');
+                Route::post('investLog','InsuranceController@investLog');
+            });
+                
             
             Route::prefix('basic')->group(function (){
 //                 Route::post('upload','BasicController@upload');
