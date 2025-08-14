@@ -156,124 +156,66 @@ class User extends Authenticatable implements JWTSubject
     
     
     /**
-     * 给上级增加业绩
+     * @param unknown $total 金额
+     * @param unknown $num   单数
+     * @param number $type
      */
-    public function handleTeamYeji($path, $num, $type=1, $field = '')
+    public function handleTeamYeji($path, $total=0, $num=1, $type=1)
     {
-        $performance = 'team_yeji';
-        $total_performance = 'total_yeji';
-        
         $parentIds = explode('-',trim($path,'-'));
         $parentIds = array_reverse($parentIds);
         $parentIds = array_filter($parentIds);
         if ($parentIds) {
             if ($type==1) {
                 User::query()->whereIn('id', $parentIds)->update([
-                    $performance=>DB::raw("`{$performance}`+{$num}"),
-                    $total_performance=>DB::raw("`{$total_performance}`+{$num}")
+                    'team_yeji'=>DB::raw("`team_yeji`+{$total}"),
+                    'total_yeji'=>DB::raw("`total_yeji`+{$total}"),
+                    'team_num'=>DB::raw("`team_num`+{$num}"),
+                    'total_num'=>DB::raw("`total_num`+{$num}"),
                 ]);
             } else {
                 User::query()->whereIn('id', $parentIds)->update([
-                    $performance=>DB::raw("`{$performance}`-{$num}"),
-                    $total_performance=>DB::raw("`{$total_performance}`-{$num}")
+                    'team_yeji'=>DB::raw("`team_yeji`-{$total}"),
+                    'total_yeji'=>DB::raw("`total_yeji`-{$total}"),
+                    'team_num'=>DB::raw("`team_num`-{$num}"),
+                    'total_num'=>DB::raw("`total_num`-{$num}"),
                 ]);
             }
         }
     }
     
     /**
-     * 给自己增加超算值业绩
+     * @param unknown $total 金额
+     * @param unknown $num   单数
+     * @param number $type
      */
-    public function handleSelfYeji($user_id, $num, $type=1, $field = '')
+    public function handleSelfYeji($user_id, $total=0, $num=1, $type=1)
     {
-        $achievement = 'self_yeji';
-        $total_performance = 'total_yeji';
-        
         if ($type==1) {
             User::query()->where('id',$user_id)->update([
-                $achievement=>DB::raw("`{$achievement}`+{$num}"),
-                $total_performance=>DB::raw("`{$total_performance}`+{$num}")
+                'self_yeji'=>DB::raw("`self_yeji`+{$total}"),
+                'total_yeji'=>DB::raw("`total_yeji`+{$total}"),
+                'self_num'=>DB::raw("`self_num`+{$num}"),
+                'total_num'=>DB::raw("`total_num`+{$num}"),
             ]);
         } else {
             User::query()->where('id',$user_id)->update([
-                $achievement=>DB::raw("`{$achievement}`-{$num}"),
-                $total_performance=>DB::raw("`{$total_performance}`-{$num}")
+                'self_yeji'=>DB::raw("`self_yeji`-{$total}"),
+                'total_yeji'=>DB::raw("`total_yeji`-{$total}"),
+                'self_num'=>DB::raw("`self_num`-{$num}"),
+                'total_num'=>DB::raw("`total_num`-{$num}"),
             ]);
         }
     }
     
-    /**
-     * 给上级增加累计推广业绩|判断抽奖次数
-     */
-    public function handlePushYeji($user_id, $num, $LuckyPool)
-    {
-        if (!$LuckyPool) {
-            $LuckyPool = LuckyPool::query()->where('id', 1)->first();   ////幸运池配置
-        }
-        
-        $user = User::query()
-            ->where('id',$user_id)
-            ->first(['id','push_yeji','lottery_num','total_lottery_num']);
-        if ($user)
-        {
-            $divNum = $sub_push_yeji = '0';
-            $total_push_yeji = bcadd($num, $user->push_yeji, 6);
-            
-            if ($LuckyPool && bccomp($LuckyPool->push_usdt, '0', 2)>0 && bccomp($total_push_yeji, '0', 6)>0)
-            {
-                $divNum = bcdiv($total_push_yeji, $LuckyPool->push_usdt, 0);
-                $sub_push_yeji = bcmul($LuckyPool->push_usdt, $divNum, 6);
-            }
-           
-            $push_yeji = bcsub($total_push_yeji, $sub_push_yeji, 6);
-            User::query()->where('id',$user_id)->update([
-                'push_yeji' => $push_yeji,
-                'zhi_yeji' => DB::raw("`zhi_yeji`+{$num}"),
-                'lottery_num'=>DB::raw("`lottery_num`+{$divNum}"),
-                'total_lottery_num'=>DB::raw("`total_lottery_num`+{$divNum}"),
-            ]);
-        }
-        
-    }
-    
-    /**
-     * 给自己增加累计签到业绩|判断抽奖次数
-     */
-    public function handleSignYeji($user_id, $num, $LuckyPool)
-    {
-        if (!$LuckyPool) {
-            $LuckyPool = LuckyPool::query()->where('id', 1)->first();   ////幸运池配置
-        }
-        
-        if ($LuckyPool && bccomp($LuckyPool->sign_usdt, '0', 2)>0)
-        {
-            $user = User::query()
-                ->where('id',$user_id)
-                ->first(['id','sign_yeji','lottery_num','total_lottery_num']);
-            if ($user)
-            {
-                $divNum = 0;
-                $total_sign_yeji = bcadd($num, $user->sign_yeji, 6);
-                if (bccomp($total_sign_yeji, '0', 6)>0) {
-                    $divNum = bcdiv($total_sign_yeji, $LuckyPool->sign_usdt, 0);
-                }
-                $sub_sign_yeji = bcmul($LuckyPool->sign_usdt, $divNum, 6);
-                $sign_yeji = bcsub($total_sign_yeji, $sub_sign_yeji, 6);
-                User::query()->where('id',$user_id)->update([
-                    'sign_yeji'=>$sign_yeji,
-                    'lottery_num'=>DB::raw("`lottery_num`+{$divNum}"),
-                    'total_lottery_num'=>DB::raw("`total_lottery_num`+{$divNum}"),
-                ]);
-            }
-        }
-    }
+
     
     /**
      * 处理余额,
      */
     public function handleUser($table, $user_id, $total, $type, $map = array())
     {
-        if (!in_array($table, array('usdt','power','dogbee','point'))) {
+        if (!in_array($table, array('usdt'))) {
             return false;
         }
         $model = DB::table("user_{$table}");
@@ -527,7 +469,7 @@ class User extends Authenticatable implements JWTSubject
                 $parentList = User::query()
                     ->whereIn('id', $parentIds)
                     ->orderBy('level', 'desc')
-                    ->get(['id','rank','hold_rank','team_yeji'])
+                    ->get(['id','rank','hold_rank','small_num'])
                     ->toArray();
                 if ($parentList && $rankConf)
                 {
@@ -536,9 +478,8 @@ class User extends Authenticatable implements JWTSubject
                         $rank = 0;
                         foreach ($rankConf as $val)
                         {
-                            //判断伞下业绩
-                            if (bccomp($val['under_usdt'], $puser['team_yeji'], 6)>0) 
-                            {
+                            //判断小区单数业绩
+                            if ($val['small_num']>$puser['small_num']) {
                                 continue;
                             }
                             

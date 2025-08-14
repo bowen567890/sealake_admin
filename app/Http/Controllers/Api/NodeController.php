@@ -26,6 +26,7 @@ use App\Models\TicketConfig;
 use App\Models\RankConfig;
 use App\Models\NodeOrderLog;
 use App\Models\NodeOrder;
+use App\Models\UserTicket;
 
 class NodeController extends Controller
 {
@@ -90,68 +91,101 @@ class NodeController extends Controller
             return responseValidateError(__('error.操作频繁'));
         }
         
-        $user = User::query()->where('id', $user->id)->first(['id','node_rank']);
-        if ($user->node_rank>0) {
+        DB::beginTransaction();
+        try
+        {
+            $user = User::query()->where('id', $user->id)->first(['id','node_rank', 'usdt']);
+            if ($user->node_rank>0) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.您已经是节点'));
+            }
+            
+            $NodeConfig = NodeConfig::query()->where('lv', $lv)->first();
+            if (!$NodeConfig || $NodeConfig->price<=0) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.系统维护'));
+            }
+            
+            if ($NodeConfig->stock<=0) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.库存不足'));
+            }
+            
+            $price = $NodeConfig->price;
+            if (bccomp($user->usdt, $price, 2)<0) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.余额不足'));
+            }
+            
+            $ordernum = get_ordernum();
+            
+            //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
+            //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
+            $userModel = new User();
+            $map = ['ordernum'=>$ordernum, 'cate'=>9, 'msg'=>'开通节点'];
+            $userModel->handleUser('usdt', $user->id, $NodeConfig->price, 2, $map);
+            
+            $order = new NodeOrder();
+            $order->ordernum = $ordernum;
+            $order->user_id = $user->id;
+            $order->lv = $NodeConfig->lv;
+            $order->price = $NodeConfig->price;
+            $order->gift_ticket_id = $NodeConfig->gift_ticket_id;
+            $order->gift_ticket_num = $NodeConfig->gift_ticket_num;
+            $order->gift_rank_id = $NodeConfig->gift_rank_id;
+            $order->static_rate = $NodeConfig->static_rate;
+            $order->pay_type = $pay_type;
+            $order->save();
+            
+            $datetime = date('Y-m-d H:i:s');
+            $TicketConfig = TicketConfig::query()->where('id', $order->gift_ticket_id)->first();
+            if ($TicketConfig && $order->gift_ticket_num>0)
+            {
+                $TicketData = [];
+                for ($i=1; $i<=$order->gift_ticket_num; $i++)
+                {
+                    $TicketData[] = [
+                        'user_id' => $order->user_id,
+                        'ticket_id' => $order->gift_ticket_id,
+                        'source_type' => 2, //来源1平台购买2平台赠送3用户赠送
+                        'ordernum' => $order->ordernum,
+                        'created_at' => $datetime,
+                        'updated_at' => $datetime
+                    ];
+                }
+                UserTicket::query()->insert($TicketData);
+            }
+            
+            $uup = [];
+            $uup['node_rank'] = $order->lv;
+            $RankConfig = RankConfig::query()->where('lv', $order->gift_rank_id)->first();
+            if ($RankConfig) {
+                $uup['rank'] = $RankConfig->lv;
+                $uup['hold_rank'] = 1;
+            }
+            if (bccomp($order->static_rate, '0', 2)>0) {
+                $uup['static_rate'] = $order->static_rate;
+            }
+            User::query()->where('id', $order->user_id)->update($uup);
+            
+            NodeConfig::query()->where('lv', $order->lv)->update([
+                'stock'=> DB::raw("`stock`-1"),
+                'sales'=> DB::raw("`sales`+1")
+            ]);
+          
+            DB::commit();
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.您已经是节点'));
+            
+            return responseJson();
         }
-        
-        $usdtCurrency = MainCurrency::query()->where('id', 1)->first(['rate','contract_address']);
-        
-        $NodeConfig = NodeConfig::query()->where('lv', $lv)->first();
-        if (!$NodeConfig || $NodeConfig->price<=0) {
+        catch (\Exception $e)
+        {
+            DB::rollBack();
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.系统维护'));
+            return responseValidateError($e->getMessage().$e->getLine());
+            //                 var_dump($e->getMessage().$e->getLine());die;
         }
-        
-        if ($NodeConfig->stock<=0) {
-            $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.库存不足'));
-        }
-        
-        $price = $NodeConfig->price;
-        
-        $ordernum = get_ordernum();
-        $Order = new NodeOrderLog();
-        $Order->ordernum = $ordernum;
-        $Order->user_id = $user->id;
-        $Order->lv = $NodeConfig->lv;
-        $Order->price = $NodeConfig->price;
-        $Order->gift_ticket_id = $NodeConfig->gift_ticket_id;
-        $Order->gift_ticket_num = $NodeConfig->gift_ticket_num;
-        $Order->gift_rank_id = $NodeConfig->gift_rank_id;
-        $Order->static_rate = $NodeConfig->static_rate;
-        $Order->pay_type = $pay_type;
-        $Order->save();
-        
-        $OrderLog = new OrderLog();
-        $OrderLog->ordernum = $ordernum;
-        $OrderLog->user_id = $user->id;
-        $OrderLog->type = 2;    //订单类型1余额提币2购买节点3购买入场券4缴纳保证金
-        $OrderLog->save();
-        
-        $is_two = 0;
-        
-        $pay_data = [];
-        
-        $tmp = [];
-        $tmp[] = [
-            'num' => $price,
-        ];
-        $pay_data[] = [
-            'total' => $price,
-            'contract_address' => $usdtCurrency->contract_address,
-            'list' => $tmp
-        ];
-        
-        $data = [
-            'remarks' => $ordernum,
-            'is_chain' => 1,
-            'is_two' => $is_two,
-            'pay_data' => $pay_data
-        ];
-        $MyRedis->del_lock($lockKey);
-        return responseJson($data);
     }
     
    

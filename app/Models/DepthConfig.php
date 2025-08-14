@@ -20,7 +20,7 @@ class DepthConfig extends Model
         $MyRedis = new MyRedis();
         $list = self::query()
             ->orderBy('depth', 'asc')
-            ->get(['depth','rate','need_valid'])
+            ->get(['zhi_num','depth'])
             ->toArray();
         if ($list) {
             $MyRedis->set_key($key, serialize($list));

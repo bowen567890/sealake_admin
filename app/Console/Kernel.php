@@ -27,15 +27,11 @@ class Kernel extends ConsoleKernel
     {
         
         //查询代币价格
-        $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
-        //每小时0分普通节点池分红
-        $schedule->command('command:SyncNodePool')->cron('0 * * * *');
-        //每天早上8:00分配一次超级节点池分红
-        $schedule->command('command:SyncNodePoolSuper')->cron('0 8 * * *');
+//         $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
         //每小时0分查询USD|CNY价格
-        $schedule->command('sync:UsdCnyPrice')->cron('0 * * * *');
-        //算力事件 不在这里执行 脚本每10秒执行
-        //         $schedule->command('command:SyncPowerEvent')->cron('* * * * *');
+//         $schedule->command('sync:UsdCnyPrice')->cron('0 * * * *');
+        //入场券日志 不在这里执行 脚本每10秒执行
+        //         $schedule->command('command:SyncTicketEvent')->cron('* * * * *');
     }
 
 

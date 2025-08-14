@@ -183,72 +183,6 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'buy_mine' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_mine.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'buy_power' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_power.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'xhy_swap' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/xhy_swap.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'signLog' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/signLog.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'team_lottery' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/team_lottery.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'team_withdraw' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/team_withdraw.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'buy_vip' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_vip.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'swap_getprice' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/swap_getprice.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'swap_purchase' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/swap_purchase.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'sync_register' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/sync_register.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'sync_bindwallet' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/sync_bindwallet.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
         'diaoyu_register' => [
             'driver' => 'daily',
             'path' => storage_path('logs/diaoyu_register.log'),
@@ -279,42 +213,6 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'holder_commission' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/holder_commission.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'buy_nft' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_nft.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'buy_user_nft' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_user_nft.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'redeem_lock' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/redeem_lock.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'trade_order' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/trade_order.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'redeem_nft' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/redeem_nft.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
         'chain_balance' => [
             'driver' => 'daily',
             'path' => storage_path('logs/chain_balance.log'),
@@ -339,45 +237,26 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'sign_power' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/sign_power.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'open_merchant' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/open_merchant.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'buy_point' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/buy_point.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'open_normal_node' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/open_normal_node.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
-        'open_super_node' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/open_super_node.log'),
-            'channels' => ['single'],
-            'ignore_exceptions' => false,
-        ],
         'buy_node' => [
             'driver' => 'daily',
             'path' => storage_path('logs/buy_node.log'),
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
+        'buy_ticket' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/buy_ticket.log'),
+            'channels' => ['single'],
+            'ignore_exceptions' => false,
+        ],
+        'user_recharge' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/user_recharge.log'),
+            'channels' => ['single'],
+            'ignore_exceptions' => false,
+        ],
+        
         
     ],
-    
-    
 
 ];

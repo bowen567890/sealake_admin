@@ -17,6 +17,8 @@ use App\Models\RankConfig;
 use App\Models\NodeOrderLog;
 use App\Models\NodeOrder;
 use App\Models\TicketOrderLog;
+use App\Models\UserTicket;
+use App\Models\TicketOrder;
 
 class TicketController extends Controller
 {
@@ -43,67 +45,89 @@ class TicketController extends Controller
             return responseValidateError(__('error.请选择入场券'));
         }
         
+        $id = intval($in['id']);
+        
         $pay_type = 1;  //支付类型1USDT(链上)3DOGBEE(链上)
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
                                                 $MyRedis->del_lock($lockKey);
-        $lock = $MyRedis->setnx_lock($lockKey, 30);
+        $lock = $MyRedis->setnx_lock($lockKey, 15);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
         }
         
-        $usdtCurrency = MainCurrency::query()->where('id', 1)->first(['rate','contract_address']);
+        DB::beginTransaction();
+        try
+        {    
+            $TicketConfig = TicketConfig::query()->where('id', $id)->first();
+            if (!$TicketConfig || $TicketConfig->ticket_price<=0 || $TicketConfig->status!=1) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.系统维护'));
+            }
+            
+            $num = '1';
+            $ticket_price = $TicketConfig->ticket_price;
+            $total_price = bcmul($ticket_price, $num, 2);
+            
+            $user = User::query()->where('id', $user->id)->first(['id','node_rank', 'usdt']);
+            if (bccomp($user->usdt, $total_price, 2)<0) {
+                $MyRedis->del_lock($lockKey);
+                return responseValidateError(__('error.余额不足'));
+            }
+            
+            $ordernum = get_ordernum();
+            
+            //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
+            //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
+            $userModel = new User();
+            $map = ['ordernum'=>$ordernum, 'cate'=>6, 'msg'=>'购买入场券'];
+            $userModel->handleUser('usdt', $user->id, $total_price, 2, $map);
+            
+            
+            $order = new TicketOrder();
+            $order->ordernum = $ordernum;
+            $order->user_id = $user->id;
+            $order->ticket_id = $TicketConfig->id;
+            $order->total_price = $total_price;
+            $order->num = $num;
+            $order->ticket_price = $ticket_price;
+            $order->pay_type = $pay_type;
+            $order->save();
+            
+            $datetime = date('Y-m-d H:i:s');
+            if ($num>0)
+            {
+                $TicketData = [];
+                for ($i=1; $i<=$num; $i++)
+                {
+                    $TicketData[] = [
+                        'user_id' => $order->user_id,
+                        'ticket_id' => $order->ticket_id,
+                        'source_type' => 1, //来源1平台购买2平台赠送3用户赠送
+                        'ordernum' => $order->ordernum,
+                        'created_at' => $datetime,
+                        'updated_at' => $datetime
+                    ];
+                }
+                UserTicket::query()->insert($TicketData);
+            }
+            
+            TicketConfig::query()->where('id', $order->ticket_id)->increment('ticket_sale', $order->num);
+            
+            DB::commit();
+            $MyRedis->del_lock($lockKey);
         
-        $TicketConfig = TicketConfig::query()->where('lv', $lv)->first();
-        if (!$TicketConfig || $TicketConfig->ticket_price<=0 || $TicketConfig->status!=1) {
+            return responseJson();
+        }
+        catch (\Exception $e)
+        {
+            DB::rollBack();
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.系统维护'));
+            return responseValidateError($e->getMessage().$e->getLine());
+            //                 var_dump($e->getMessage().$e->getLine());die;
         }
-        
-        $ticket_price = $TicketConfig->ticket_price;
-        
-        $ordernum = get_ordernum();
-        $Order = new TicketOrderLog();
-        $Order->ordernum = $ordernum;
-        $Order->user_id = $user->id;
-        $Order->lv = $NodeConfig->lv;
-        $Order->price = $NodeConfig->price;
-        $Order->gift_ticket_id = $NodeConfig->gift_ticket_id;
-        $Order->gift_ticket_num = $NodeConfig->gift_ticket_num;
-        $Order->gift_rank_id = $NodeConfig->gift_rank_id;
-        $Order->static_rate = $NodeConfig->static_rate;
-        $Order->pay_type = $pay_type;
-        $Order->save();
-        
-        $OrderLog = new OrderLog();
-        $OrderLog->ordernum = $ordernum;
-        $OrderLog->user_id = $user->id;
-        $OrderLog->type = 2;    //订单类型1余额提币2购买节点3购买入场券4缴纳保证金
-        $OrderLog->save();
-        
-        $is_two = 0;
-        
-        $pay_data = [];
-        
-        $tmp = [];
-        $tmp[] = [
-            'num' => $price,
-        ];
-        $pay_data[] = [
-            'total' => $price,
-            'contract_address' => $usdtCurrency->contract_address,
-            'list' => $tmp
-        ];
-        
-        $data = [
-            'remarks' => $ordernum,
-            'is_chain' => 1,
-            'is_two' => $is_two,
-            'pay_data' => $pay_data
-        ];
-        $MyRedis->del_lock($lockKey);
-        return responseJson($data);
     }
     
    

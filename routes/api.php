@@ -77,6 +77,11 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('index','IndexController@index');
             });
             
+            Route::prefix('recharge')->group(function (){
+                Route::post('recharge','RechargeController@recharge');
+                Route::post('rechargeLog','RechargeController@rechargeLog');
+            });
+            
             Route::prefix('node')->group(function (){
                 Route::post('config','NodeController@config');
                 Route::post('openNode','NodeController@openNode');
