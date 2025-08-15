@@ -76,6 +76,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
             Route::prefix('index')->group(function (){
                 Route::post('index','IndexController@index');
                 Route::post('ranking','IndexController@ranking');
+                Route::post('pool','IndexController@pool');
             });
             
             Route::prefix('recharge')->group(function (){

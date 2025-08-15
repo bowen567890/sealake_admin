@@ -32,6 +32,7 @@ use App\Models\IgniteOrderLog;
 use App\Models\IgniteOrder;
 use App\Models\SignConfig;
 use App\Models\UserRankingDay;
+use App\Models\PoolConfig;
 
 class IndexController extends Controller
 {
@@ -71,6 +72,12 @@ class IndexController extends Controller
             }
         }
         return responseJson($list);
+    }
+    
+    public function pool(Request $request)
+    {
+        $PoolConfig = PoolConfig::query()->get(['type','pool'])->toArray();
+        return responseJson($PoolConfig);
     }
     
     public function newsList(Request $request)
