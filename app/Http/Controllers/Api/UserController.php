@@ -69,7 +69,20 @@ class UserController extends Controller
         $data['small_num'] = $user->small_num;
         $data['total_income'] = $user->total_income;
         
+        //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
+        //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
+        $today_income = UserUsdt::query()
+            ->where('user_id', $user->id)
+            ->whereIn('type', [14])
+            ->whereDate('created_at',date('Y-m-d'))
+            ->sum('total');
+        $data['today_income'] = $today_income;
+        
         $data['static_rate'] = $user->static_rate;
+        
+        $data['hold_ticket'] = UserTicket::query()->where('user_id', $user->id)->where('status', 0)->count();
+        
+        
         $data['headimgurl'] = getImageUrl($user->headimgurl);
         
         $withdraw_fee_bnb = @bcadd(config('withdraw_fee_bnb'), '0', 6);

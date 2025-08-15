@@ -176,18 +176,18 @@ class TicketController extends Controller
         
         if ($UserTicket->status!=0 || $UserTicket->source_type!=2) {
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.此入场券不可转账'));
+            return responseValidateError(__('error.此入场券不可赠送'));
         }
             
         $toUser = User::query()->where('wallet', $wallet)->first(['id']);
         if (!$toUser) {
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.目标地址不存在'));
+            return responseValidateError(__('error.赠送用户不存在'));
         }
         
         if ($toUser->id==$user->id) {
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.不可转账给自己'));
+            return responseValidateError(__('error.不能赠送给自己'));
         }
         
         
