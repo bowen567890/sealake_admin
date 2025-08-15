@@ -41,9 +41,9 @@ class UserTreeController extends AdminController
             $grid->column('usdt');
             $grid->column('zhi_num');
             $grid->column('group_num');
-            $grid->column('self_yeji');
-            $grid->column('team_yeji');
-            $grid->column('small_yeji','小区业绩');
+            $grid->column('self_num');
+            $grid->column('team_num');
+            $grid->column('small_num');
             
             /* 
             $grid->column('wallet', '钱包地址')->display('点击查看') // 设置按钮名称

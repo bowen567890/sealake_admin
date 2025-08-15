@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'NodeOrder' => 'NodeOrder',
-        'node-order' => 'NodeOrder',
+        'NodeOrder' => '节点订单',
+        'node-order' => '节点订单',
     ],
     'fields' => [
         'user_id' => '用户ID',

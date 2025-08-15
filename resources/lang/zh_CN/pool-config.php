@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'PoolConfig' => 'PoolConfig',
-        'pool-config' => 'PoolConfig',
+        'PoolConfig' => '奖池配置',
+        'pool-config' => '奖池配置',
     ],
     'fields' => [
         'type' => '池子类型',

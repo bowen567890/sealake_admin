@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'UserTicket' => 'UserTicket',
-        'user-ticket' => 'UserTicket',
+        'UserTicket' => '用户入场券',
+        'user-ticket' => '用户入场券',
     ],
     'fields' => [
         'user_id' => '用户ID',

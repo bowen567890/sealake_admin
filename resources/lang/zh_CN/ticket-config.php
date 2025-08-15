@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'TicketConfig' => 'TicketConfig',
-        'ticket-config' => 'TicketConfig',
+        'TicketConfig' => '入场券配置',
+        'ticket-config' => '入场券配置',
     ],
     'fields' => [
         'ticket_price' => '入场券价格',

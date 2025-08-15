@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'InsuranceOrder' => 'InsuranceOrder',
-        'insurance-order' => 'InsuranceOrder',
+        'InsuranceOrder' => '挖矿订单',
+        'insurance-order' => '挖矿订单',
     ],
     'fields' => [
         'user_id' => '用户ID',
@@ -18,6 +18,7 @@ return [
         'over_income' => '已出局数数量',
         'next_time' => '下次释放时间',
         'redeem_time' => '赎回时间',
+        'ordernum' => '订单号',
     ],
     'options' => [
     ],

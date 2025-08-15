@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'NodeConfig' => 'NodeConfig',
-        'node-config' => 'NodeConfig',
+        'NodeConfig' => '节点配置',
+        'node-config' => '节点配置',
     ],
     'fields' => [
         'lv' => '节点等级',

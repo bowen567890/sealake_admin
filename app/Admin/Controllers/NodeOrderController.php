@@ -10,16 +10,13 @@ use Dcat\Admin\Http\Controllers\AdminController;
 
 class NodeOrderController extends AdminController
 {
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
     protected function grid()
     {
         return Grid::make(NodeOrder::with(['ticket','rank']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('lv', '开通等级')->using($this->nodeRankArr)->label('success');
             $grid->column('price');
             $grid->column('gift_ticket_id')->display(function() {
                 if ($this->ticket){
@@ -39,14 +36,14 @@ class NodeOrderController extends AdminController
             
             $grid->column('static_rate');
 //             $grid->column('pay_type');
-            $grid->column('ordernum');
-            $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
-            ->modal(function ($modal) {
-                // 设置弹窗标题
-                $modal->title('交易哈希');
-                // 自定义图标
-                return $this->hash;
-            });
+//             $grid->column('ordernum');
+//             $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
+//             ->modal(function ($modal) {
+//                 // 设置弹窗标题
+//                 $modal->title('交易哈希');
+//                 // 自定义图标
+//                 return $this->hash;
+//             });
         
             $grid->column('created_at');
             $grid->model()->orderBy('id','desc');
@@ -60,6 +57,7 @@ class NodeOrderController extends AdminController
             
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('lv', '开通等级')->select($this->nodeRankArr);
             });
         });
     }

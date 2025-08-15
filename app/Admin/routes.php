@@ -27,38 +27,20 @@ Route::group([
     $router->resource('rank_conf','RankConfigController');
     $router->resource('deep_config','DeepConfigController');
     
-    
     $router->resource('ticket_currency','TicketCurrencyController');
     $router->resource('news','NewsController');
     
-    $router->resource('user_dogbee','UserDogbeeController');
     $router->resource('user_usdt','UserUsdtController');
-    $router->resource('user_power','UserPowerController');
-    $router->resource('lucky_pool','LuckyPoolController');
-    $router->resource('lucky_log','LuckyLogController');
-    
-    $router->resource('sign_config','SignConfigController');
-    $router->resource('sign_order','SignOrderController');
-    $router->resource('power_order','PowerOrderController');
-    $router->resource('see_config','SeeConfigController');
-    $router->resource('node_pool','NodePoolController');
-    $router->resource('manage_config','ManageRankConfigController');
-    $router->resource('manage_operate_log','ManageOperateLogController');
-    
-    $router->resource('merchant_order','MerchantOrderController');
-    $router->resource('point_config','PointConfigController');
-    
-    $router->resource('point_order','PointOrderController');
-    $router->resource('user_point','UserPointController');
-    
-    $router->resource('normal_nodeorder','NormalNodeOrderController');
-    $router->resource('super_nodeorder','SuperNodeOrderController');
     
     $router->resource('node_config','NodeConfigController');
     $router->resource('node_order','NodeOrderController');
     $router->resource('ticket_config','TicketConfigController');
     $router->resource('user_ticket','UserTicketController');
     
+    $router->resource('insurance_order','InsuranceOrderController');
+    
+    $router->resource('user_ranking_day','UserRankingDayController');
+    $router->resource('pool_config','PoolConfigController');
     
     
 //     $router->any('auth/extensions',function (){

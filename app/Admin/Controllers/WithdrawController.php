@@ -26,7 +26,6 @@ class WithdrawController extends AdminController
             $grid->column('fee');
             $grid->column('fee_amount');
             $grid->column('ac_amount');
-            $grid->column('fee_power', '提币手续费(算力)');
             $grid->column('status')
             ->display(function () {
                 $arr = [

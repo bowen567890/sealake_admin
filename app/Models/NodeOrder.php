@@ -17,4 +17,8 @@ class NodeOrder extends Model
     public function rank(){
         return $this->hasOne(RankConfig::class,'lv','gift_rank_id');
     }
+    
+    public function noderank(){
+        return $this->hasOne(NodeConfig::class,'lv','lv');
+    }
 }

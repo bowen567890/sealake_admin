@@ -22,53 +22,31 @@ class UserRankingDayController extends AdminController
             $grid->column('user_id');
             $grid->column('day');
             $grid->column('num');
-            $grid->column('total');
-            $grid->column('created_at');
+//             $grid->column('total');
+            $grid->column('ranking');
+            $grid->column('reward');
+//             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
+            
+            $grid->model()->orderBy('id','desc');
+            //             $grid->model()->orderBy('date','desc');
+            //             $grid->model()->orderBy('total','desc');
         
+            $grid->disableCreateButton();
+            $grid->disableRowSelector();
+            $grid->disableDeleteButton();
+            $grid->disableActions();
+            $grid->scrollbarX();    			//滚动条
+            $grid->paginate(10);				//分页
+            
+            
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+//                 $filter->equal('user.account', '用户账号');
+                $filter->date('day');
             });
         });
     }
 
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
-    protected function detail($id)
-    {
-        return Show::make($id, new UserRankingDay(), function (Show $show) {
-            $show->field('id');
-            $show->field('user_id');
-            $show->field('day');
-            $show->field('num');
-            $show->field('total');
-            $show->field('created_at');
-            $show->field('updated_at');
-        });
-    }
-
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
-    protected function form()
-    {
-        return Form::make(new UserRankingDay(), function (Form $form) {
-            $form->display('id');
-            $form->text('user_id');
-            $form->text('day');
-            $form->text('num');
-            $form->text('total');
-        
-            $form->display('created_at');
-            $form->display('updated_at');
-        });
-    }
+   
 }

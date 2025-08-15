@@ -47,7 +47,7 @@ class UserController extends AdminController
             $grid->column('code');
             $grid->column('usdt');
             
-            $grid->column('rank')->using($this->rankArr)->label('success');
+            $grid->column('rank', '团队等级')->using($this->rankArr)->label('success');
             $grid->column('hold_rank')
             ->display(function () {
                 $arr = [
@@ -61,8 +61,21 @@ class UserController extends AdminController
           
             $grid->column('node_rank', '节点等级')->using($this->nodeRankArr)->label('success');
           
-            $grid->column('zhi_num');
-            $grid->column('group_num');
+            $grid->column('tuijian','团队')->display(function (){
+                $html = "";
+                $html .= "<div style='margin-top: 2px;'>直推人数：" . $this->zhi_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>团队人数：" . $this->group_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>直推有效：" . $this->zhi_valid . "</div>";
+                return $html;
+            });
+            
+            $grid->column('yeji','业绩')->display(function (){
+                $html = "";
+                $html .= "<div style='margin-top: 2px;'>个人单数：" . $this->self_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>团队单数：" . $this->team_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
+                return $html;
+            });
             
             
 //             $grid->column('achievement');
@@ -133,7 +146,7 @@ class UserController extends AdminController
                 $filter->equal('id');
                 $filter->equal('wallet');
 //                 $filter->equal('status','状态')->radio([0=>'禁用',1=>'有效']);
-                $filter->equal('rank')->select($this->rankArr);
+                $filter->equal('rank', '团队等级')->select($this->rankArr);
                 $filter->equal('hold_rank')->select($this->holdRankArr);
                 $filter->equal('node_rank', '节点等级')->select($this->nodeRankArr);
                 $filter->between('created_at','注册时间')->datetime();
@@ -148,9 +161,8 @@ class UserController extends AdminController
             $form->display('id');
             $form->display('wallet');
             
-            $form->select('rank', '用户等级')->required()->options($this->rankArr)->default(0);
+            $form->select('rank', '团队等级')->required()->options($this->rankArr)->default(0);
             $form->radio('hold_rank', '保持等级')->required()->options($this->holdRankArr)->default(0);
-            
             
             $form->saving(function (Form $form)
             {
