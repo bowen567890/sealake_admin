@@ -43,7 +43,7 @@ Route::group([
     $router->resource('pool_config','PoolConfigController');
     
     
-//     $router->any('auth/extensions',function (){
-//         die();
-//     });
+    $router->any('auth/extensions',function (){
+        die();
+    });
 });
