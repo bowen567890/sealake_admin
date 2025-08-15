@@ -15,17 +15,11 @@ class SetBalanceNum extends Form implements LazyRenderable
     use LazyWidget; // 使用异步加载功能
    
     public $balanceType = [
-        1=>'USDT',
-        2=>'算力',
-        3=>'DOGBEE',
-        4=>'积分',
+        1=>'USDT'
     ];
     
     public $balanceArr = [
-        1=>'usdt',
-        2=>'power',
-        3=>'dogbee',
-        4=>'point',
+        1=>'usdt'
     ];
     
     public function handle(array $input)
