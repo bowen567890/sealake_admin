@@ -64,10 +64,10 @@ class BulletinController extends AdminController
         return Form::make(new Bulletin(), function (Form $form) {
             $form->text('title')->required();
             $form->text('title_en')->required();
-            $form->text('title_fr')->required();
-            $form->editor('content')->required()->disk('admin')->height('600');
-            $form->editor('content_en')->required()->disk('admin')->height('600');
-            $form->editor('content_fr')->required()->disk('admin')->height('600');
+//             $form->text('title_fr')->required();
+            $form->textarea('content')->required();
+            $form->textarea('content_en')->required();
+//             $form->editor('content_fr')->required()->disk('admin')->height('600');
             $form->radio('status')->required()->options($this->statusArr)->default(1);
             $form->number('sort','排序')->required()->default(99)->min(0);
             
