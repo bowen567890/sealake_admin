@@ -21,4 +21,8 @@ class NodeOrder extends Model
     public function noderank(){
         return $this->hasOne(NodeConfig::class,'lv','lv');
     }
+    
+    public function user(){
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

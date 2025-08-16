@@ -14,4 +14,7 @@ class UserTicket extends Model
     public function ticket(){
         return $this->hasOne(TicketConfig::class,'id','ticket_id');
     }
+    public function user(){
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

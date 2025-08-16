@@ -15,9 +15,10 @@ class RechargeController extends AdminController
     ];
     protected function grid()
     {
-        return Grid::make(new Recharge(), function (Grid $grid) {
+        return Grid::make(Recharge::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
 //             $grid->column('main_chain');
             $grid->column('coin_type')->using($this->CoinTypeArr)->label('success');
             $grid->column('num');
@@ -39,6 +40,7 @@ class RechargeController extends AdminController
             
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
             });
         });
     }

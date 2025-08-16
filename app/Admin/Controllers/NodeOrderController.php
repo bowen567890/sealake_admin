@@ -13,9 +13,10 @@ class NodeOrderController extends AdminController
     public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
     protected function grid()
     {
-        return Grid::make(NodeOrder::with(['ticket','rank']), function (Grid $grid) {
+        return Grid::make(NodeOrder::with(['ticket','rank', 'user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
             $grid->column('lv', '开通等级')->using($this->nodeRankArr)->label('success');
             $grid->column('price');
             $grid->column('gift_ticket_id')->display(function() {
@@ -57,6 +58,7 @@ class NodeOrderController extends AdminController
             
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
                 $filter->equal('lv', '开通等级')->select($this->nodeRankArr);
             });
         });

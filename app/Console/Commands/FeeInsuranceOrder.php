@@ -49,7 +49,7 @@ class FeeInsuranceOrder extends Command
                 ->orderBy('o.next_time', 'asc')
                 ->get([
                     'o.id','o.user_id','o.ticket_price','o.total_income','o.wait_income','o.over_income','o.ordernum','o.next_time',
-                    'users.parent_id','users.path'
+                    'users.parent_id','users.static_rate','users.path'
                 ])
                 ->toArray();
                 

@@ -14,9 +14,10 @@ class UserTicketController extends AdminController
     public $sourceTypeArr = [1=>'平台购买',2=>'平台赠送',3=>'用户赠送'];
     protected function grid()
     {
-        return Grid::make(UserTicket::with(['ticket']), function (Grid $grid) {
+        return Grid::make(UserTicket::with(['ticket', 'user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
             $grid->column('ticket_id');
             $grid->column('ticket_id')->display(function() {
                 if ($this->ticket){
@@ -43,6 +44,7 @@ class UserTicketController extends AdminController
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
                 $filter->equal('status')->select($this->statusArr);
                 $filter->equal('source_type')->select($this->sourceTypeArr);
             });

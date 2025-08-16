@@ -20,9 +20,10 @@ class InsuranceOrderController extends AdminController
     ];
     protected function grid()
     {
-        return Grid::make(new InsuranceOrder(), function (Grid $grid) {
+        return Grid::make(InsuranceOrder::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
 //             $grid->column('ticket_id');
 //             $grid->column('user_ticket_id');
             $grid->column('status')->using($this->statusArr)->label('success');
@@ -50,6 +51,7 @@ class InsuranceOrderController extends AdminController
         
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
                 $filter->equal('status')->select($this->statusArr);
                 $filter->equal('is_redeem')->select($this->redeemArr);
             });

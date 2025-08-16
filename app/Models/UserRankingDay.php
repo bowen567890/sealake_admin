@@ -10,5 +10,7 @@ class UserRankingDay extends Model
 {
 	use HasDateTimeFormatter;
     protected $table = 'user_ranking_day';
-    
+    public function user(){
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

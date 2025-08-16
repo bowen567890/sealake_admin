@@ -17,9 +17,10 @@ class UserRankingDayController extends AdminController
      */
     protected function grid()
     {
-        return Grid::make(new UserRankingDay(), function (Grid $grid) {
+        return Grid::make(UserRankingDay::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
             $grid->column('day');
             $grid->column('num');
 //             $grid->column('total');
@@ -42,6 +43,7 @@ class UserRankingDayController extends AdminController
             
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
 //                 $filter->equal('user.account', '用户账号');
                 $filter->date('day');
             });

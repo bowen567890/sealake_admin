@@ -32,9 +32,10 @@ class UserUsdtController extends AdminController
      
     protected function grid()
     {
-        return Grid::make(new UserUsdt(), function (Grid $grid) {
+        return Grid::make(UserUsdt::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
             $grid->column('type')
             ->display(function () {
                 $arr = [1=>'收入', 2=>'支出'];
@@ -62,6 +63,7 @@ class UserUsdtController extends AdminController
             
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
                 $filter->equal('type')->select([1=>'收入', 2=>'支出']);
                 $filter->equal('cate')->select($this->cateArr);
             });
