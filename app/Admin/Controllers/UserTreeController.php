@@ -41,9 +41,22 @@ class UserTreeController extends AdminController
             $grid->column('usdt');
             $grid->column('zhi_num');
             $grid->column('group_num');
+            
             $grid->column('self_num');
             $grid->column('team_num');
-            $grid->column('small_num');
+            $grid->column('yeji','业绩')->display(function (){
+                
+                $big_num = UserModel::query()->where('parent_id', $this->id)->orderBy('total_num', 'desc')->value('total_num');
+                $big_num = intval($big_num);
+                
+                $html = "";
+                $html .= "<div style='margin-top: 2px;'>大区单数：" . $big_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
+                return $html;
+            });
+            
+
+//             $grid->column('small_num');
             
             /* 
             $grid->column('wallet', '钱包地址')->display('点击查看') // 设置按钮名称
