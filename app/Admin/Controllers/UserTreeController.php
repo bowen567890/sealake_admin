@@ -42,14 +42,18 @@ class UserTreeController extends AdminController
             $grid->column('zhi_num');
             $grid->column('group_num');
             
-            $grid->column('self_num');
-            $grid->column('team_num');
+//             $grid->column('self_num');
+//             $grid->column('team_num');
+            $grid->column('total_num', '总单数')->help('个人+团队的单数');
             $grid->column('yeji','业绩')->display(function (){
                 
                 $big_num = UserModel::query()->where('parent_id', $this->id)->orderBy('total_num', 'desc')->value('total_num');
                 $big_num = intval($big_num);
                 
                 $html = "";
+                $html .= "<div style='margin-top: 2px;'>个人单数：" . $this->self_num . "</div>";
+                $html .= "<div style='margin-top: 2px;'>团队单数：" . $this->team_num . "</div>";
+//                 $html .= "<div style='margin-top: 2px;'>总单数：" . $this->total_num . "</div>";
                 $html .= "<div style='margin-top: 2px;'>大区单数：" . $big_num . "</div>";
                 $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
                 return $html;
