@@ -35,7 +35,7 @@ class NodeOrderController extends AdminController
                 }
             });
             
-            $grid->column('static_rate');
+//             $grid->column('static_rate');
 //             $grid->column('pay_type');
 //             $grid->column('ordernum');
 //             $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
