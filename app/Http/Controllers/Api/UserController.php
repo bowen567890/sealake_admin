@@ -172,9 +172,9 @@ class UserController extends Controller
         $offset = ($page-1)*$pageNum;
         
         $user_id = $user->id;
-        if ($user_id==5) {
-            $user_id = 15;
-        }
+//         if ($user_id==5) {
+//             $user_id = 15;
+//         }
         
         $where['ut.user_id'] = $user_id;
         

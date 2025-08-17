@@ -140,6 +140,7 @@ class SyncTicketEvent extends Command
                                     'total' => $zhiNum,
                                     'msg' => '直推奖励',
                                     'content' => "直推奖励",
+                                    'depth' => 0,
                                     'created_at' => $datetime,
                                     'updated_at' => $datetime,
                                 ];
@@ -196,6 +197,7 @@ class SyncTicketEvent extends Command
                                                     'total' => $depthNum,
                                                     'msg' => '层级奖励',
                                                     'content' => "层级{$diffLevel}层奖励",
+                                                    'depth' => $diffLevel,
                                                     'created_at' => $datetime,
                                                     'updated_at' => $datetime,
                                                 ];
