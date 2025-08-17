@@ -166,6 +166,8 @@ class InsuranceController extends Controller
         
         $list = InsuranceOrder::query()
             ->where($where)
+            ->orderBy('is_redeem', 'asc')
+            ->orderBy('status', 'asc')
             ->orderBy('id', 'desc')
             ->offset($offset)
             ->limit($pageNum)
