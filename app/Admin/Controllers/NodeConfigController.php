@@ -35,7 +35,7 @@ class NodeConfigController extends AdminController
             $grid->column('gift_ticket_id')->using($this->ticketArr)->label('success');
             $grid->column('gift_ticket_num');
             $grid->column('gift_rank_id')->using($this->rankArr)->label('success');
-            $grid->column('static_rate');
+//             $grid->column('static_rate');
             $grid->column('stock');
             $grid->column('sales');
         
@@ -74,18 +74,18 @@ class NodeConfigController extends AdminController
             $form->select('gift_ticket_id')->required()->options($this->ticketArr)->default(0);
             $form->number('gift_ticket_num', '入场券数量')->min(0)->required();
             $form->select('gift_rank_id')->required()->options($this->rankArr)->default(0);
-            $form->decimal('static_rate')->placeholder('0.1=10%')->help('静态收益比率(0.1=10%)')->required();
+//             $form->decimal('static_rate')->placeholder('0.1=10%')->help('静态收益比率(0.1=10%)')->required();
             $form->number('stock')->required();
             
             $form->saving(function (Form $form)
             {
-                $id = $form->getKey();
-                $static_rate = @bcadd($form->static_rate, '0', 2);
-                if (bccomp($static_rate, '1', 2)>0 || bccomp('0', $static_rate, 2)>=0) {
-                    return $form->response()->error('静态收益比率不正确');
-                }
+//                 $id = $form->getKey();
+//                 $static_rate = @bcadd($form->static_rate, '0', 2);
+//                 if (bccomp($static_rate, '1', 2)>0 || bccomp('0', $static_rate, 2)>=0) {
+//                     return $form->response()->error('静态收益比率不正确');
+//                 }
                 
-                $form->static_rate = $static_rate;
+//                 $form->static_rate = $static_rate;
             });
             
             $form->saved(function (Form $form, $result) {
