@@ -73,7 +73,7 @@ class UserController extends Controller
         //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
         $today_income = UserUsdt::query()
             ->where('user_id', $user->id)
-            ->whereIn('type', [14])
+            ->whereIn('cate', [14])
             ->whereDate('created_at',date('Y-m-d'))
             ->sum('total');
         $data['today_income'] = $today_income;
