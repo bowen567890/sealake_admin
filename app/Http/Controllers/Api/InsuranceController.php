@@ -222,6 +222,7 @@ class InsuranceController extends Controller
         $userModel->handleUser('usdt', $user->id, $InsuranceOrder->insurance, 1, $map);
         
         $InsuranceOrder->is_redeem = 1;
+        $InsuranceOrder->next_time = '';
         $InsuranceOrder->redeem_time = date('Y-m-d H:i:s');
         $InsuranceOrder->save();
         
