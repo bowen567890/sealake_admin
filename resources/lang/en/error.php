@@ -55,6 +55,8 @@ return [
     '请输入充值金额' => 'Please enter the deposit amount',
     '请输入目标地址' => 'Please enter the destination address',
     '此入场券不可赠送' => 'This ticket cannot be gifted',
+    '订单已赎回' => 'Order redeemed',
+    '入场券状态已更新' => 'The status of the admission ticket has been updated',
     
     //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
     'USDT类型1' => 'System increase',

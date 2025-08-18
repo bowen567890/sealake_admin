@@ -68,7 +68,7 @@ class InsuranceController extends Controller
             
             if ($UserTicket->status!=0) {
                 $MyRedis->del_lock($lockKey);
-                return responseValidateError(__('error.请选择入场券'));
+                return responseValidateError(__('error.入场券状态已更新'));
             }
             
             $TicketConfig = TicketConfig::query()->where('id', $UserTicket->ticket_id)->first();
@@ -210,7 +210,7 @@ class InsuranceController extends Controller
         
         if ($InsuranceOrder->is_redeem!=0) {
             $MyRedis->del_lock($lockKey);
-            return responseValidateError(__('error.当前不可赎回'));
+            return responseValidateError(__('error.订单已赎回'));
         }
         
         $ordernum = get_ordernum();
