@@ -49,6 +49,8 @@ class IndexController extends Controller
         $in = $request->input();
         $user = auth()->user();
         $data['wallet'] = $user->wallet;
+        $data['telegram_group_link'] = config('telegram_group_link');
+        $data['nadi_group_link'] = config('nadi_group_link');
         return responseJson($data);
     }
     
