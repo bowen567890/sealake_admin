@@ -39,6 +39,8 @@ class NodeController extends Controller
             ->toArray();
         if ($list) 
         {
+            $every_income_rate = config('every_income_rate');
+            $every_income_rate = $every_income_rate*100;
             foreach ($list as &$val) 
             {
                 $val['ticket_price'] = '0';
@@ -55,8 +57,7 @@ class NodeController extends Controller
                 }
                 
                 $val['stock'] = $val['stock']<=0 ? 0 : $val['stock'];
-                $static_rate = $val['static_rate']*100;
-                $val['static_rate'] = $static_rate.'%';
+                $val['static_rate'] = $every_income_rate.'%';
                 
             }
         }
