@@ -15,7 +15,7 @@ class SendTicket extends AbstractTool
     /**
      * @return string
      */
-	protected $title = '赠送门票';
+	protected $title = '赠送入场券';
 	protected $style = 'btn btn-primary';
 
 	public function render()
@@ -27,6 +27,6 @@ class SendTicket extends AbstractTool
     	    ->lg()
     	    ->title($this->title)
     	    ->body($form)
-    	    ->button('<a class="btn btn-primary btn-outline" style="color: #586cb1;">赠送门票</a>');
+    	    ->button('<a class="btn btn-primary btn-outline" style="color: #586cb1;">赠送入场券</a>');
 	}
 }
