@@ -10,6 +10,7 @@ use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Http\JsonResponse;
 use App\Models\RankConfig;
 use App\Models\TicketConfig;
+use App\Admin\Actions\Grid\SendNode;
 
 class NodeConfigController extends AdminController
 {
@@ -29,6 +30,9 @@ class NodeConfigController extends AdminController
     protected function grid()
     {
         return Grid::make(new NodeConfig(), function (Grid $grid) {
+            
+            $grid->tools(new SendNode());
+            
             $grid->column('id')->sortable();
             $grid->column('lv')->using($this->nodeRankArr)->label('success');
             $grid->column('price');

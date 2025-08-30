@@ -136,6 +136,7 @@ class NodeController extends Controller
             $order->gift_rank_id = $NodeConfig->gift_rank_id;
             $order->static_rate = $NodeConfig->static_rate;
             $order->pay_type = $pay_type;
+            $order->source_type = 1;    //来源1平台购买2平台赠送
             $order->save();
             
             $datetime = date('Y-m-d H:i:s');

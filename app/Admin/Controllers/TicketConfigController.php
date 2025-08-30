@@ -8,6 +8,7 @@ use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Http\JsonResponse;
+use App\Admin\Actions\Grid\SendTicket;
 
 class TicketConfigController extends AdminController
 {
@@ -19,6 +20,9 @@ class TicketConfigController extends AdminController
     protected function grid()
     {
         return Grid::make(new TicketConfig(), function (Grid $grid) {
+            
+            $grid->tools(new SendTicket());
+            
             $grid->column('id')->sortable();
             $grid->column('ticket_price');
             $grid->column('insurance', '缴纳保险金');
