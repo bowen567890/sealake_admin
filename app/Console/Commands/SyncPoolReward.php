@@ -181,8 +181,8 @@ class SyncPoolReward extends Command
                     {
                         $subPool = bcadd($subPool, $avg, 6);
                       
-                        $this->setUserList($val['id']);
-                        $this->userList[$val['id']]['usdt'] = bcadd($this->userList[$val['id']]['usdt'], $avg, 6);
+                        $this->setUserList($val['user_id']);
+                        $this->userList[$val['user_id']]['usdt'] = bcadd($this->userList[$val['user_id']]['usdt'], $avg, 6);
                         
                         //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
                         //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
