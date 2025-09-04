@@ -88,6 +88,9 @@ class UserController extends Controller
         $withdraw_fee_bnb = @bcadd(config('withdraw_fee_bnb'), '0', 6);
         $withdraw_fee_bnb = bccomp($withdraw_fee_bnb, '0', 6)>0 ? $withdraw_fee_bnb : '0.0015';
         $data['withdraw_fee_bnb'] = $withdraw_fee_bnb;
+        
+        $withdraw_fee_rate = @bcadd(config('withdraw_fee_rate'), '0', 4);
+        $data['withdraw_fee_rate'] = $withdraw_fee_rate*100;
         return responseJson($data);
     }
     
