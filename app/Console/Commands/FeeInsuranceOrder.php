@@ -52,7 +52,7 @@ class FeeInsuranceOrder extends Command
                     'users.parent_id','users.path'
                 ])
                 ->toArray();
-                
+              
             if ($list && $every_income_rate>0) 
             {
                 $every_income_hour = @bcadd(config('every_income_hour'), '0', 0);
@@ -95,6 +95,17 @@ class FeeInsuranceOrder extends Command
                         $oup['next_time'] = '';
                         $num = $val['wait_income'];
                         $oup['over_income'] = bcadd($val['over_income'], $num, 2);
+                        
+//                         //判断是否还有挖矿的订单
+//                         $isExists = InsuranceOrder::query()
+//                             ->where('user_id', $val['user_id'])
+//                             ->where('status', 0)        //状态0待出局1已出局
+//                             ->where('is_redeem', 0)     //赎回状态0待赎回1已赎回
+//                             ->exists();
+//                         if (!$isExists) {
+//                             User::query()->where('id', $val['user_id'])->update(['is_active'=>0]);
+//                         }
+                        
                     } else {
                         $next_time = strtotime($val['next_time']);
                         $next_time = date('Y-m-d H:i:s', $next_time+$every_income_hour*3600);
@@ -150,15 +161,17 @@ class FeeInsuranceOrder extends Command
                             //上级信息
                             $parentIds = explode('-',trim($val['path'],'-'));
                             $parentIds = array_filter($parentIds);
-                            
+                           
                             if ($parentIds)
                             {
                                 $parentList = User::query()
                                     ->where('rank', '>', 0)
+                                    ->where('is_active', 1)
                                     ->whereIn('id', $parentIds)
                                     ->orderBy('level', 'desc')
-                                    ->get(['id','rank','level'])
+                                    ->get(['id','rank','level','is_active'])
                                     ->toArray();
+                                
                                 if ($parentList)
                                 {
                                     $currentRank = 0;

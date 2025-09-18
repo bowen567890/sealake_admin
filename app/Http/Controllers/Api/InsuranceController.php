@@ -77,7 +77,7 @@ class InsuranceController extends Controller
                 return responseValidateError(__('error.系统维护'));
             }
             
-            $user = User::query()->where('id', $user->id)->first(['id','node_rank', 'usdt']);
+            $user = User::query()->where('id', $user->id)->first(['id','node_rank','usdt','is_active']);
             
             $insurance = $TicketConfig->insurance;
             if (bccomp($user->usdt, $insurance, 2)<0) {
@@ -127,7 +127,10 @@ class InsuranceController extends Controller
             $UserTicket->status = 1;    //状态0待使用1已使用2已赠送
             $UserTicket->insurance_id = $order->id;
             $UserTicket->save();
-          
+            
+            $user->is_active = 1;
+            $user->save();
+            
             DB::commit();
             $MyRedis->del_lock($lockKey);
             
@@ -225,6 +228,16 @@ class InsuranceController extends Controller
         $InsuranceOrder->next_time = '';
         $InsuranceOrder->redeem_time = date('Y-m-d H:i:s');
         $InsuranceOrder->save();
+        
+        //判断是否还有挖矿的订单
+        $isExists = InsuranceOrder::query()
+            ->where('user_id', $user->id)
+//             ->where('status', 0)        //状态0待出局1已出局
+            ->where('is_redeem', 0)     //赎回状态0待赎回1已赎回
+            ->exists();
+        if (!$isExists) {
+            User::query()->where('id', $user->id)->update(['is_active'=>0]);
+        }
         
         $MyRedis->del_lock($lockKey);
         
