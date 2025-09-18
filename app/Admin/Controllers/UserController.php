@@ -61,6 +61,17 @@ class UserController extends AdminController
           
             $grid->column('node_rank', '节点等级')->using($this->nodeRankArr)->label('success');
           
+            $grid->column('is_active', '活跃用户')
+            ->display(function () {
+                $arr = [
+                    0 => '否',
+                    1 => '是',
+                ];
+                $msg = $arr[$this->is_active];
+                $colour = $this->is_active == 1 ? '#4277cf' : 'gray';
+                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+            })->help('未赎回保证金为活跃用户');
+            
             $grid->column('tuijian','团队')->display(function (){
                 $html = "";
                 $html .= "<div style='margin-top: 2px;'>直推人数：" . $this->zhi_num . "</div>";
@@ -154,6 +165,7 @@ class UserController extends AdminController
                 $filter->equal('rank', '团队等级')->select($this->rankArr);
                 $filter->equal('hold_rank')->select($this->holdRankArr);
                 $filter->equal('node_rank', '节点等级')->select($this->nodeRankArr);
+                $filter->equal('is_active', '活跃用户')->select($this->holdRankArr);
                 $filter->between('created_at','注册时间')->datetime();
             });
         });
