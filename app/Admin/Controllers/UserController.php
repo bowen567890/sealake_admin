@@ -160,7 +160,9 @@ class UserController extends AdminController
 
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
+                $filter->equal('parent.id','上级ID');
                 $filter->equal('wallet');
+                $filter->equal('parent.wallet','上级地址');
 //                 $filter->equal('status','状态')->radio([0=>'禁用',1=>'有效']);
                 $filter->equal('rank', '团队等级')->select($this->rankArr);
                 $filter->equal('hold_rank')->select($this->holdRankArr);
