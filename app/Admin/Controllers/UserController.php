@@ -5,6 +5,7 @@ namespace App\Admin\Controllers;
 use App\Admin\Actions\Grid\SetBalanceNum;
 use App\Admin\Actions\Grid\UpdateWallet;
 use App\Admin\Actions\Grid\SetManageRank;
+use App\Admin\Actions\Grid\SetCanWithdraw;
 
 use App\Admin\Repositories\User;
 use Dcat\Admin\Actions\Action;
@@ -71,6 +72,21 @@ class UserController extends AdminController
                 $colour = $this->is_active == 1 ? '#4277cf' : 'gray';
                 return "<span class='label' style='background:{$colour}'>{$msg}</span>";
             })->help('未赎回保证金为活跃用户');
+            
+            $grid->column('can_withdraw', '个人提币')
+            ->display(function () {
+                $arr = [0=>'禁止',1=>'允许'];
+                $msg = $arr[$this->can_withdraw];
+                $colour = $this->can_withdraw == 1 ? '#4277cf' : 'gray';
+                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+            });
+            $grid->column('team_can_withdraw', '团队提币')
+            ->display(function () {
+                $arr = [0=>'禁止',1=>'允许'];
+                $msg = $arr[$this->team_can_withdraw];
+                $colour = $this->team_can_withdraw == 1 ? '#4277cf' : 'gray';
+                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+            });
             
             $grid->column('tuijian','团队')->display(function (){
                 $html = "";
@@ -147,6 +163,7 @@ class UserController extends AdminController
             $grid->actions(function (Grid\Displayers\Actions $actions) use (&$grid){
                 $actions->append(new SetBalanceNum());
                 $actions->append(new UpdateWallet());
+                $actions->append(new SetCanWithdraw());
 //                 $actions->append(new SetManageRank());
             });
             
@@ -168,6 +185,8 @@ class UserController extends AdminController
                 $filter->equal('hold_rank')->select($this->holdRankArr);
                 $filter->equal('node_rank', '节点等级')->select($this->nodeRankArr);
                 $filter->equal('is_active', '活跃用户')->select($this->holdRankArr);
+                $filter->equal('can_withdraw', '个人提币')->select([0=>'禁止',1=>'允许']);
+                $filter->equal('team_can_withdraw', '团队提币')->select([0=>'禁止',1=>'允许']);
                 $filter->between('created_at','注册时间')->datetime();
             });
         });

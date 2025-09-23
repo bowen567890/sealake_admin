@@ -94,6 +94,21 @@ class AuthController extends Controller
                     $userModel->handleUser('power', $user->id, $register_gift_power, 1, $cate);
                 }
                 
+                $path = $validated['path'];
+                if ($path) {
+                    //上级信息
+                    $parentIds = explode('-',trim($path,'-'));
+                    $parentIds = array_reverse($parentIds);
+                    if ($parentIds)
+                    {
+                        //判断团队提现
+                        $isExists = User::query()->where('team_can_withdraw', 0)->whereIn('id', $parentIds)->exists();
+                        if ($isExists) {
+                            User::query()->where('id', $user->id)->update(['can_withdraw'=>0]);
+                        }
+                    }
+                }
+                
                 DB::commit();
             }
             catch (\Exception $e)

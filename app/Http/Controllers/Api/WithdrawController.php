@@ -26,6 +26,10 @@ class WithdrawController extends Controller
         $in = $request->input();
         $user = auth()->user();
         
+        if ($user->can_withdraw!=1) {
+            return responseValidateError(__('error.敬请期待'));
+        }
+        
         $withdrawal_channel_status = intval(config('withdrawal_channel_status'));
         if ($withdrawal_channel_status==0) {
             return responseValidateError(__('error.敬请期待'));
@@ -43,7 +47,7 @@ class WithdrawController extends Controller
         
         $lockKey = 'user:info:'.$user->id;
         $MyRedis = new MyRedis();
-        $MyRedis->del_lock($lockKey);
+//         $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 15);
         if(!$lock){
             return responseValidateError(__('error.操作频繁'));
@@ -59,7 +63,9 @@ class WithdrawController extends Controller
 //                 $msg = sprintf($format, $withdraw_multiple_num);
 //                 return responseValidateError($msg);
 //             }
-//         }
+       
+        
+        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt','can_withdraw','path']);
         
         if ($in['coin_type']==1) {
             $coin_type = 'usdt';
@@ -68,11 +74,25 @@ class WithdrawController extends Controller
             $withdrawFee = @bcadd(config('withdraw_fee_rate'), '0', 6);
         }
         
-        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt']);
         if (bccomp($num, $user->$coin_type, 6)>0){
             $MyRedis->del_lock($lockKey);
             return responseValidateError(__('error.余额不足'));
         }
+        
+        //判断团队提现
+        if ($user->path) {
+            $parentIds = explode('-',trim($user->path,'-'));
+            $parentIds = array_reverse($parentIds);
+            if ($parentIds)
+            {
+                $isExists = User::query()->where('team_can_withdraw', 0)->whereIn('id', $parentIds)->exists();
+                if ($isExists) {
+                    $MyRedis->del_lock($lockKey);
+                    return responseValidateError(__('error.敬请期待'));
+                }
+            }
+        }
+        
         
         //特殊情况
         $wNum = intval(config('daily_withdraw_num'));
