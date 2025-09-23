@@ -115,44 +115,63 @@ class UserController extends AdminController
 //             $grid->column('status','状态')->switch('',true);
 
             
-//             $grid->column('pathlist', '关系树')->display('查看') // 设置按钮名称
-//                 ->modal(function ($modal) {
-//                     // 设置弹窗标题
-//                     $modal->title('关系树');
-//                     $path = $this->path;
-//                     $parentIds = explode('-',trim($path,'-'));
-//                     $parentIds = array_reverse($parentIds);
-//                     $parentIds = array_filter($parentIds);
+            $grid->column('pathlist', '关系树')->display('查看') // 设置按钮名称
+                ->modal(function ($modal) {
+                    // 设置弹窗标题
+                    $modal->title('关系树');
+                    $path = $this->path;
+                    $parentIds = explode('-',trim($path,'-'));
+                    $parentIds = array_reverse($parentIds);
+                    $parentIds = array_filter($parentIds);
                     
-//                     $html = '<table class="table custom-data-table data-table" id="grid-table">
-//                                     <thead>
-//                                     	  <tr>
-//                                     			 <th>上级ID</th>
-//                                                  <th>层级</th>
-//                                                  <th>等级</th>
-//                                     			 <th>地址</th>
-//                                     	  </tr>
-//                                     </thead>
-//                                     <tbody>';
+                    $html = '<table class="table custom-data-table data-table" id="grid-table">
+                                    <thead>
+                                    	  <tr>
+                                    			 <th>上级ID</th>
+                                                 <th>层级</th>
+                                    			 <th>地址</th>
+                                                 <th>个人提币</th>
+                                    			 <th>团队提币</th>
+                                    	  </tr>
+                                    </thead>
+                                    <tbody>';
                     
-//                     if ($parentIds)
-//                     {
-//                         $list = UserModel::query()->whereIn('id',$parentIds)->orderBy('level', 'desc')->get(['id','wallet','level','code','rank'])->toArray();
-//                         if ($list) {
-//                             foreach ($list as $val) {
-//                                 $html.= "<tr><td>{$val['id']}</td>";
-//                                 $html.= "<td>{$val['level']}</td>";
-//                                 $html.= "<td>V{$val['rank']}</td>";
-//                                 $html.= "<td>{$val['wallet']}</td>";
-//                                 $html.= "</tr>";
-//                             }
-//                         }
-//                     }
+                    if ($parentIds)
+                    {
+                        $list = UserModel::query()
+                            ->whereIn('id',$parentIds)
+                            ->orderBy('level', 'desc')->get(['id','wallet','level','code','rank','can_withdraw','team_can_withdraw'])
+                            ->toArray();
+                        if ($list) 
+                        {
+                            
+                            
+                            foreach ($list as $val) {
+                                if ($val['team_can_withdraw']==1) {
+                                    $team_can_withdraw = "<span class='label' style='background:#4277cf'>允许</span>";
+                                } else {
+                                    $team_can_withdraw = "<span class='label' style='background:gray'>禁止</span>";
+                                }
+                                if ($val['can_withdraw']==1) {
+                                    $can_withdraw = "<span class='label' style='background:#4277cf'>允许</span>";
+                                } else {
+                                    $can_withdraw = "<span class='label' style='background:gray'>禁止</span>";
+                                }
+                                
+                                $html.= "<tr><td>{$val['id']}</td>";
+                                $html.= "<td>{$val['level']}</td>";
+                                $html.= "<td>{$val['wallet']}</td>";
+                                $html.= "<td>{$can_withdraw}</td>";
+                                $html.= "<td>{$team_can_withdraw}</td>";
+                                $html.= "</tr>";
+                            }
+                        }
+                    }
                     
-//                     $html.= "</tbody></table>";
-//                     // 自定义图标
-//                     return $html;
-//             });
+                    $html.= "</tbody></table>";
+                    // 自定义图标
+                    return $html;
+            });
             
             
             $grid->column('created_at','注册时间');
