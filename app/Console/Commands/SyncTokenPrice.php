@@ -51,7 +51,7 @@ class SyncTokenPrice extends Command
                         $contract_address = $val['contract_address_lp'];
                         $response = $client->post('http://127.0.0.1:9090/v1/bnb/lpInfo',[
                             'form_params' => [
-                                'contract_address' => $contract_address
+                                'contract_address' => $contract_address //LP合约地址
                             ],
                             'timeout' => 10,
                             'verify' => false

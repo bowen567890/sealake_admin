@@ -178,6 +178,65 @@ class UserController extends AdminController
             $grid->model()->orderBy('id','desc');
             $grid->model()->where('is_del', '=', 0);
             
+            
+            $titles = [
+                'id' => '用户ID',
+                'wallet' => '钱包地址',
+                'code' => '邀请码',
+                'parent.id' => '上级ID',
+                'rank' => '团队等级',
+                'usdt' => 'USDT',
+                'hold_rank' => '保持等级',
+                'node_rank' => '节点等级',
+                'is_active' => '活跃用户',
+                'is_valid' => '有效用户',
+                'zhi_valid' => '直推有效用户',
+                'zhi_num' => '直推人数',
+                'group_num' => '团队人数',
+                'self_num' => '个人单数',
+                'team_num' => '团队单数',
+                'small_num' => '小区单数',
+                'can_withdraw' => '个人提币',
+                'team_can_withdraw' => '团队提币',
+                'created_at' => '注册时间',
+            ];
+            
+            
+            
+            $grid->export($titles)->rows(function ($rows) {
+                set_time_limit(0);
+                ini_set('memory_limit','1024M');
+                
+//                 public $holdRankArr = [
+//                     0 => '否',1 => '是'
+//                 ];
+//                 public $rankArr = [];
+//                 public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
+//                 public function __construct()
+//                 {
+//                     $rankArr = RankConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+//                     $this->rankArr = array_merge([0=>'V0'], $rankArr);
+//                 }
+                
+                $rankArr = $this->rankArr;
+                $nodeRankArr = $this->nodeRankArr;
+                $arr = [
+                    0 => '否',
+                    1 => '是',
+                ];
+                
+                foreach ($rows as $index => &$row)
+                {
+                    $row['rank'] = $rankArr[$row['rank']];
+                    $row['hold_rank'] = $arr[$row['hold_rank']];
+                    $row['node_rank'] = $nodeRankArr[$row['node_rank']];
+                    
+                    $row['can_withdraw'] = $arr[$row['can_withdraw']];
+                    $row['team_can_withdraw'] = $arr[$row['team_can_withdraw']];
+                }
+                return $rows;
+            });
+            
             //如果代发货，显示发货按钮
             $grid->actions(function (Grid\Displayers\Actions $actions) use (&$grid){
                 $actions->append(new SetBalanceNum());
