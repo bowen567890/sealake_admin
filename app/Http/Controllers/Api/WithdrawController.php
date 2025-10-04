@@ -26,8 +26,11 @@ class WithdrawController extends Controller
         $in = $request->input();
         $user = auth()->user();
         
-        if ($user->can_withdraw!=1) {
-            return responseValidateError(__('error.敬请期待'));
+        //提币白名单
+        if ($user->is_white_withdraw!=1) {
+            if ($user->can_withdraw!=1) {
+                return responseValidateError(__('error.敬请期待'));
+            }
         }
         
         $withdrawal_channel_status = intval(config('withdrawal_channel_status'));
@@ -65,7 +68,7 @@ class WithdrawController extends Controller
 //             }
        
         
-        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt','can_withdraw','path']);
+        $user = User::query()->where('id', $user->id)->first(['id','wallet','usdt','can_withdraw','is_white_withdraw','path']);
         
         if ($in['coin_type']==1) {
             $coin_type = 'usdt';
@@ -80,15 +83,20 @@ class WithdrawController extends Controller
         }
         
         //判断团队提现
-        if ($user->path) {
+        if ($user->path) 
+        {
             $parentIds = explode('-',trim($user->path,'-'));
             $parentIds = array_reverse($parentIds);
             if ($parentIds)
             {
-                $isExists = User::query()->where('team_can_withdraw', 0)->whereIn('id', $parentIds)->exists();
-                if ($isExists) {
-                    $MyRedis->del_lock($lockKey);
-                    return responseValidateError(__('error.敬请期待'));
+                $isWhite = User::query()->where('is_white_withdraw_team', 1)->whereIn('id', $parentIds)->exists();
+                if (!$isWhite) 
+                {
+                    $isExists = User::query()->where('team_can_withdraw', 0)->whereIn('id', $parentIds)->exists();
+                    if ($isExists) {
+                        $MyRedis->del_lock($lockKey);
+                        return responseValidateError(__('error.敬请期待'));
+                    }
                 }
             }
         }

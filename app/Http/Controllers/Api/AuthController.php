@@ -106,6 +106,12 @@ class AuthController extends Controller
                         if ($isExists) {
                             User::query()->where('id', $user->id)->update(['can_withdraw'=>0]);
                         }
+                        
+                        //判断团队提现白名单
+                        $isExists2 = User::query()->where('is_white_withdraw_team', 1)->whereIn('id', $parentIds)->exists();
+                        if ($isExists2) {
+                            User::query()->where('id', $user->id)->update(['is_white_withdraw'=>1]);
+                        }
                     }
                 }
                 

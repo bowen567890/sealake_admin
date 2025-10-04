@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Models\MyRedis;
 use Illuminate\Support\Facades\DB;
 
-class SetCanWithdraw extends Form implements LazyRenderable
+class SetWhiteWithdraw extends Form implements LazyRenderable
 {
     use LazyWidget; // 使用异步加载功能
    
@@ -25,9 +25,9 @@ class SetCanWithdraw extends Form implements LazyRenderable
         $optype = $input['optype'] == 1 ? 1 : 0;
         $type = $input['type']==2 ? 2 : 1;
         
-        $lockKey = 'SetCanWithdrawForm';
+        $lockKey = 'SetWhiteWithdraw';
         $MyRedis = new MyRedis();
-//         $MyRedis->del_lock($lockKey);
+        $MyRedis->del_lock($lockKey);
         $lock = $MyRedis->setnx_lock($lockKey, 60);
         if(!$lock){
             return $this->response()->error('操作频繁');
@@ -40,7 +40,7 @@ class SetCanWithdraw extends Form implements LazyRenderable
         
         if ($type==2) 
         {
-            $user->team_can_withdraw = $optype;
+            $user->is_white_withdraw_team = $optype;
             
             if($user->path) {
                 $path = $user->path."{$user->id}-";
@@ -50,10 +50,10 @@ class SetCanWithdraw extends Form implements LazyRenderable
             
             User::query()
                 ->where('path', 'like', "{$path}%")
-                ->update(['can_withdraw'=>$optype]);
+                ->update(['is_white_withdraw'=>$optype]);
         }
         
-        $user->can_withdraw = $optype;
+        $user->is_white_withdraw = $optype;
         $user->save();
         
         $MyRedis->del_lock($lockKey);
@@ -71,11 +71,11 @@ class SetCanWithdraw extends Form implements LazyRenderable
         $this->display('id', '用户ID');
 //         $this->display('code', '邀请码');
         $this->display('wallet', '用户地址');
-        $this->display('is_withdraw', '个人提币');
-        $this->display('team_can_withdraw', '团队提币');
+        $this->display('is_white_withdraw', '个人提币白名单')->help('设置白名单不受提币设置配置限制,可自由提币');
+        $this->display('is_white_withdraw_team', '团队提币白名单')->help('设置白名单不受提币设置配置限制,可自由提币');
         
         $this->radio('type','操作对象')->options($this->typeArr)->required()->help("选择团队则个人+团队一起设置");
-        $this->radio('optype','操作类型')->options([1=>'允许', 0=>'禁止'])->required();
+        $this->radio('optype','是否白名')->options([1=>'是', 0=>'否'])->required()->help('设置白名单不受提币设置配置限制,可自由提币');
         $this->disableResetButton();
     }
     
@@ -88,14 +88,14 @@ class SetCanWithdraw extends Form implements LazyRenderable
     {
         $id = $this->payload['id'] ?? 0;
         
-        $user = User::query()->where('id', $id)->first(['id','wallet','can_withdraw','team_can_withdraw','code']);
+        $user = User::query()->where('id', $id)->first(['id','wallet','is_white_withdraw','is_white_withdraw_team','code']);
         
         return [
             'id' => $user->id,
             'wallet' => $user->wallet,
             'code' => $user->code,
-            'is_withdraw' => $user->can_withdraw==1 ? '允许' : '禁止',
-            'team_can_withdraw' => $user->team_can_withdraw==1 ? '允许' : '禁止',
+            'is_white_withdraw' => $user->is_white_withdraw==1 ? '是' : '否',
+            'is_white_withdraw_team' => $user->is_white_withdraw_team==1 ? '是' : '否',
 //             'type' => 1,
         ];
     }

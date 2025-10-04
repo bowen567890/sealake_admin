@@ -6,6 +6,7 @@ use App\Admin\Actions\Grid\SetBalanceNum;
 use App\Admin\Actions\Grid\UpdateWallet;
 use App\Admin\Actions\Grid\SetManageRank;
 use App\Admin\Actions\Grid\SetCanWithdraw;
+use App\Admin\Actions\Grid\SetWhiteWithdraw;
 
 use App\Admin\Repositories\User;
 use Dcat\Admin\Actions\Action;
@@ -73,6 +74,8 @@ class UserController extends AdminController
                 return "<span class='label' style='background:{$colour}'>{$msg}</span>";
             })->help('未赎回保证金为活跃用户');
             
+            
+            
             $grid->column('can_withdraw', '个人提币')
             ->display(function () {
                 $arr = [0=>'禁止',1=>'允许'];
@@ -87,6 +90,22 @@ class UserController extends AdminController
                 $colour = $this->team_can_withdraw == 1 ? '#4277cf' : 'gray';
                 return "<span class='label' style='background:{$colour}'>{$msg}</span>";
             });
+            
+            $grid->column('is_white_withdraw')
+            ->display(function () {
+                $arr = [0=>'否',1=>'是'];
+                $msg = $arr[$this->is_white_withdraw];
+                $colour = $this->is_white_withdraw == 1 ? '#4277cf' : 'gray';
+                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+            })->help('设置白名单不受提币设置配置限制,可自由提币');
+            
+            $grid->column('is_white_withdraw_team')
+            ->display(function () {
+                $arr = [0=>'否',1=>'是'];
+                $msg = $arr[$this->is_white_withdraw_team];
+                $colour = $this->is_white_withdraw_team == 1 ? '#4277cf' : 'gray';
+                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+            })->help('设置白名单不受提币设置配置限制,可自由提币');
             
             $grid->column('tuijian','团队')->display(function (){
                 $html = "";
@@ -108,8 +127,6 @@ class UserController extends AdminController
                 $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
                 return $html;
             });
-            
-            
 //             $grid->column('achievement');
 //             $grid->column('achievement_ma');
 //             $grid->column('status','状态')->switch('',true);
@@ -132,6 +149,8 @@ class UserController extends AdminController
                                     			 <th>地址</th>
                                                  <th>个人提币</th>
                                     			 <th>团队提币</th>
+                                                 <th>个人提币白名单</th>
+                                    			 <th>团队提币白名单</th>
                                     	  </tr>
                                     </thead>
                                     <tbody>';
@@ -140,13 +159,14 @@ class UserController extends AdminController
                     {
                         $list = UserModel::query()
                             ->whereIn('id',$parentIds)
-                            ->orderBy('level', 'desc')->get(['id','wallet','level','code','rank','can_withdraw','team_can_withdraw'])
+                            ->orderBy('level', 'desc')->get(['id','wallet','level','code','rank','can_withdraw','team_can_withdraw','is_white_withdraw','is_white_withdraw_team'])
                             ->toArray();
                         if ($list) 
                         {
                             
                             
-                            foreach ($list as $val) {
+                            foreach ($list as $val) 
+                            {
                                 if ($val['team_can_withdraw']==1) {
                                     $team_can_withdraw = "<span class='label' style='background:#4277cf'>允许</span>";
                                 } else {
@@ -158,11 +178,24 @@ class UserController extends AdminController
                                     $can_withdraw = "<span class='label' style='background:gray'>禁止</span>";
                                 }
                                 
+                                if ($val['is_white_withdraw']==1) {
+                                    $is_white_withdraw = "<span class='label' style='background:#4277cf'>否</span>";
+                                } else {
+                                    $is_white_withdraw = "<span class='label' style='background:gray'>是</span>";
+                                }
+                                if ($val['is_white_withdraw_team']==1) {
+                                    $is_white_withdraw_team = "<span class='label' style='background:#4277cf'>否</span>";
+                                } else {
+                                    $is_white_withdraw_team = "<span class='label' style='background:gray'>是</span>";
+                                }
+                                
                                 $html.= "<tr><td>{$val['id']}</td>";
                                 $html.= "<td>{$val['level']}</td>";
                                 $html.= "<td>{$val['wallet']}</td>";
                                 $html.= "<td>{$can_withdraw}</td>";
                                 $html.= "<td>{$team_can_withdraw}</td>";
+                                $html.= "<td>{$is_white_withdraw}</td>";
+                                $html.= "<td>{$is_white_withdraw_team}</td>";
                                 $html.= "</tr>";
                             }
                         }
@@ -198,6 +231,8 @@ class UserController extends AdminController
                 'small_num' => '小区单数',
                 'can_withdraw' => '个人提币',
                 'team_can_withdraw' => '团队提币',
+                'is_white_withdraw' => '个人提币白名单',
+                'is_white_withdraw_team' => '团队提币白名单',
                 'created_at' => '注册时间',
             ];
             
@@ -233,6 +268,9 @@ class UserController extends AdminController
                     
                     $row['can_withdraw'] = $arr[$row['can_withdraw']];
                     $row['team_can_withdraw'] = $arr[$row['team_can_withdraw']];
+                    
+                    $row['is_white_withdraw'] = $arr[$row['is_white_withdraw']];
+                    $row['is_white_withdraw_team'] = $arr[$row['is_white_withdraw_team']];
                 }
                 return $rows;
             });
@@ -242,6 +280,7 @@ class UserController extends AdminController
                 $actions->append(new SetBalanceNum());
                 $actions->append(new UpdateWallet());
                 $actions->append(new SetCanWithdraw());
+                $actions->append(new SetWhiteWithdraw());
 //                 $actions->append(new SetManageRank());
             });
             
@@ -265,6 +304,10 @@ class UserController extends AdminController
                 $filter->equal('is_active', '活跃用户')->select($this->holdRankArr);
                 $filter->equal('can_withdraw', '个人提币')->select([0=>'禁止',1=>'允许']);
                 $filter->equal('team_can_withdraw', '团队提币')->select([0=>'禁止',1=>'允许']);
+                
+                $filter->equal('is_white_withdraw')->select([0=>'否',1=>'是']);
+                $filter->equal('is_white_withdraw_team')->select([0=>'否',1=>'是']);
+                
                 $filter->between('created_at','注册时间')->datetime();
             });
         });
